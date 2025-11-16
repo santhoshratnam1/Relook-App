@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Item, Deck, Reminder, SourceType, ContentType } from '../types';
-import { ScreenshotIcon, ArrowLeftIcon, DotsVerticalIcon, EditIcon, TrashIcon, BookOpenIcon, BellIcon } from '../components/IconComponents';
+import { ScreenshotIcon, ArrowLeftIcon, DotsVerticalIcon, EditIcon, TrashIcon, BookOpenIcon, BellIcon, LinkIcon } from '../components/IconComponents';
 import AddToDeckModal from '../components/AddToDeckModal';
 import EditItemModal from '../components/EditItemModal';
 import RecipeView from '../components/RecipeView';
@@ -42,8 +42,8 @@ interface YouTubeVideo {
 const SourceInfo: React.FC<{ type: SourceType }> = ({ type }) => {
     const iconMap: Record<SourceType, React.ReactNode> = {
         [SourceType.Screenshot]: <ScreenshotIcon />,
-        [SourceType.Manual]: <EditIcon />,
-        [SourceType.Bookmark]: <BookOpenIcon />,
+        [SourceType.Manual]: <EditIcon className="w-5 h-5"/>,
+        [SourceType.Bookmark]: <LinkIcon className="w-5 h-5"/>,
         [SourceType.Instagram]: <BookOpenIcon />,
         [SourceType.LinkedIn]: <BookOpenIcon />,
     };
@@ -177,11 +177,23 @@ const ItemDetail: React.FC<ItemDetailProps> = ({ itemId, items, decks, reminders
             <h1 className="text-3xl font-bold text-white">{item.title}</h1>
         </div>
         
+        {item.source_type === SourceType.Bookmark && (item.urls?.[0] || item.body.startsWith('http')) && (
+            <a
+                href={item.urls?.[0] || item.body}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full flex justify-center items-center space-x-2 font-semibold py-3 px-4 rounded-xl bg-white/10 hover:bg-white/20 active:scale-98 transition-all"
+            >
+                <LinkIcon className="w-5 h-5"/>
+                <span>Visit Source Link</span>
+            </a>
+        )}
+
         <div className="text-gray-300 whitespace-pre-wrap leading-relaxed py-4 border-y border-white/10">
           {renderContentView()}
           {hasStructuredData && (
               <details className="mt-4 group">
-                  <summary className="text-sm text-gray-400 cursor-pointer list-none group-hover:text-white transition-colors">View original post</summary>
+                  <summary className="text-sm text-gray-400 cursor-pointer list-none group-hover:text-white transition-colors">View original text</summary>
                   <p className="whitespace-pre-wrap leading-relaxed pt-2 mt-2 border-t border-white/10">{item.body}</p>
               </details>
           )}

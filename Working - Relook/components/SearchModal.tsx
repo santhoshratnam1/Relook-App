@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Item, SourceType } from '../types';
-import { XIcon, ScreenshotIcon } from './IconComponents';
+import { XIcon, ScreenshotIcon, LinkIcon, EditIcon } from '../components/IconComponents';
 
 interface SearchModalProps {
   items: Item[];
@@ -12,6 +12,10 @@ const SourceIcon = ({ type }: { type: SourceType }) => {
     switch (type) {
         case SourceType.Screenshot:
             return <ScreenshotIcon className="w-5 h-5 text-gray-400" />;
+        case SourceType.Bookmark:
+            return <LinkIcon className="w-5 h-5 text-gray-400" />;
+        case SourceType.Manual:
+            return <EditIcon className="w-5 h-5 text-gray-400" />;
         default:
             return <div className="w-5 h-5 bg-gray-600 rounded-md" />;
     }

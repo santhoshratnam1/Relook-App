@@ -3,6 +3,7 @@ import UserProfile from '../components/UserProfile';
 import RecentSaves from '../components/RecentSaves';
 import Classifier from '../components/Classifier';
 import ImageClassifier from '../components/ImageClassifier';
+import BookmarkClassifier from '../components/BookmarkClassifier';
 import DailyMissions from '../components/DailyMissions';
 import { 
     User, Rewards, Item, Mission, Achievement
@@ -91,9 +92,10 @@ const Dashboard: React.FC<DashboardProps> = ({
       {/* Add to Inbox Section */}
       <div className="mb-4">
         <h3 className="text-xl font-bold text-white px-4 mb-3">Add to Inbox</h3>
-        <div className="space-y-0">
+        <div className="space-y-3">
           <ImageClassifier onItemAdded={onItemAdded} />
           <Classifier onItemAdded={onItemAdded} />
+          <BookmarkClassifier onItemAdded={onItemAdded} />
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Item, SourceType, Deck, ContentType } from '../types';
 import DashboardCard from '../components/DashboardCard';
-import { ScreenshotIcon, BellIcon } from '../components/IconComponents';
+import { ScreenshotIcon, BellIcon, LinkIcon, EditIcon } from '../components/IconComponents';
 import SwipeableItemCard from '../components/SwipeableItemCard';
 import ImageLoader from '../components/ImageLoader';
 
@@ -17,6 +17,10 @@ const SourceIcon = ({ type }: { type: SourceType }) => {
     switch (type) {
         case SourceType.Screenshot:
             return <ScreenshotIcon className="w-5 h-5 text-gray-400" />;
+        case SourceType.Bookmark:
+            return <LinkIcon className="w-5 h-5 text-gray-400" />;
+        case SourceType.Manual:
+            return <EditIcon className="w-5 h-5 text-gray-400" />;
         default:
             return <div className="w-5 h-5 bg-gray-600 rounded-md" />;
     }

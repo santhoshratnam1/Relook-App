@@ -1,7 +1,7 @@
 import React from 'react';
 import { Item, SourceType } from '../types';
 import DashboardCard from './DashboardCard';
-import { ScreenshotIcon, BellIcon } from './IconComponents';
+import { ScreenshotIcon, BellIcon, LinkIcon, EditIcon } from './IconComponents';
 import ImageLoader from './ImageLoader';
 
 interface RecentSavesProps {
@@ -12,9 +12,13 @@ interface RecentSavesProps {
 const SourceIcon = ({ type }: { type: SourceType }) => {
     switch (type) {
         case SourceType.Screenshot:
-            return <ScreenshotIcon className="w-4 h-4 text-gray-400" />;
+            return <ScreenshotIcon className="w-5 h-5 text-gray-400" />;
+        case SourceType.Bookmark:
+            return <LinkIcon className="w-5 h-5 text-gray-400" />;
+        case SourceType.Manual:
+            return <EditIcon className="w-5 h-5 text-gray-400" />;
         default:
-            return <div className="w-4 h-4 bg-gray-500 rounded-sm" />;
+            return <div className="w-5 h-5 bg-gray-500 rounded-sm" />;
     }
 }
 
