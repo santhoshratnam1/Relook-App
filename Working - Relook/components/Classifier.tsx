@@ -1,16 +1,24 @@
 import React, { useState } from 'react';
 import DashboardCard from './DashboardCard';
 import { classifyContent } from '../services/geminiService';
-import { ContentType, SourceType, ExtractedEvent } from '../types';
+import { ContentType, SourceType, ExtractedEvent, RecipeData } from '../types';
 import { SparklesIcon, BellIcon } from './IconComponents';
 
 interface ClassifierProps {
-    onItemAdded: (data: { title: string; body: string; content_type: ContentType; source_type: SourceType, extractedEvent: ExtractedEvent | null }) => void;
+    onItemAdded: (data: { 
+        title: string; 
+        body: string; 
+        content_type: ContentType; 
+        source_type: SourceType; 
+        extractedEvent: ExtractedEvent | null;
+        recipeData?: RecipeData | null;
+    }) => void;
 }
 
 type ResultState = {
     classification: { category: ContentType; title: string; summary: string };
     extractedEvent: ExtractedEvent | null;
+    recipeData: RecipeData | null;
 } | null;
 
 const Classifier: React.FC<ClassifierProps> = ({ onItemAdded }) => {
@@ -50,30 +58,31 @@ const Classifier: React.FC<ClassifierProps> = ({ onItemAdded }) => {
         if (!result) return;
         onItemAdded({
             title: result.classification.title,
-            body: text, // Save the original text as the body
+            body: text,
             content_type: result.classification.category,
             source_type: SourceType.Manual,
-            extractedEvent: result.extractedEvent
+            extractedEvent: result.extractedEvent,
+            recipeData: result.recipeData,
         });
         resetState();
     }
 
     return (
-        <div className="px-6 my-4">
+        <div className="px-4">
              <DashboardCard>
                 <div className="space-y-4">
                     <textarea
                         value={text}
                         onChange={(e) => setText(e.target.value)}
                         placeholder="Paste text from a screenshot or note..."
-                        className="w-full h-24 p-2 bg-[#0C0D0F] border border-white/10 rounded-xl resize-none focus:ring-2 focus:ring-[#E6F0C6] focus:outline-none transition"
+                        className="w-full h-24 p-3 bg-[#0C0D0F] border border-white/10 rounded-xl resize-none focus:ring-2 focus:ring-[#E6F0C6] focus:outline-none transition text-sm"
                         disabled={!!result}
                     />
                     {!result && (
                         <button
                             onClick={handleClassify}
                             disabled={isLoading}
-                            className="w-full flex justify-center items-center space-x-2 font-bold py-3 px-4 rounded-full bg-gradient-to-r from-[#E6F0C6] to-[#F6F2D8] text-black hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full flex justify-center items-center space-x-2 font-bold py-3 px-4 rounded-xl bg-gradient-to-r from-[#E6F0C6] to-[#F6F2D8] text-black hover:opacity-90 active:scale-98 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                              {isLoading ? 'Analyzing...' : <> <SparklesIcon className="w-5 h-5"/> <span>Classify Text</span> </>}
                         </button>
@@ -93,16 +102,22 @@ const Classifier: React.FC<ClassifierProps> = ({ onItemAdded }) => {
                                     {result.extractedEvent && (
                                         <span className="text-xs flex items-center space-x-1 text-cyan-300">
                                             <BellIcon className="w-4 h-4" />
-                                            <span>Reminder Detected</span>
+                                            <span>Reminder</span>
                                         </span>
                                     )}
                                 </div>
                             </div>
                             <div className="mt-4 flex space-x-2">
-                                <button onClick={resetState} className="w-full font-semibold py-2 px-4 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                                <button 
+                                    onClick={resetState} 
+                                    className="w-full font-semibold py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 active:scale-98 transition-all"
+                                >
                                     Clear
                                 </button>
-                                <button onClick={handleSave} className="w-full font-bold py-2 px-4 rounded-full bg-gradient-to-r from-[#E6F0C6] to-[#F6F2D8] text-black hover:opacity-90 transition-opacity">
+                                <button 
+                                    onClick={handleSave} 
+                                    className="w-full font-bold py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#E6F0C6] to-[#F6F2D8] text-black hover:opacity-90 active:scale-98 transition-all"
+                                >
                                     Save to Inbox
                                 </button>
                             </div>

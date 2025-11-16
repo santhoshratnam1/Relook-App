@@ -1,10 +1,12 @@
 import React, { useMemo } from 'react';
+import { STORE_ITEMS } from '../data/store';
 
 interface KnowledgeTreeProps {
   level: number;
   streak: number;
   itemCount: number;
   deckCount: number;
+  equippedItems: { [key: string]: string };
 }
 
 interface Branch {
@@ -18,12 +20,17 @@ interface Leaf {
     cy: number;
     r: number;
     delay: number;
+    color: string;
 }
 
-const generateTree = (level: number, itemCount: number, deckCount: number): { branches: Branch[], leaves: Leaf[] } => {
+const generateTree = (level: number, itemCount: number, deckCount: number, equippedTree?: string): { branches: Branch[], leaves: Leaf[] } => {
   const branches: Branch[] = [];
   const leaves: Leaf[] = [];
   
+  let leafColor = '#E6F0C6';
+  if (equippedTree === 'tree_sakura') leafColor = '#FFB7C5';
+  if (equippedTree === 'tree_golden') leafColor = '#FFD700';
+
   const trunkHeight = 60 + level * 6;
   const trunkWidth = 4 + level * 0.5;
   branches.push({ d: `M 150 ${280 - trunkHeight} V 280`, delay: 0, strokeWidth: trunkWidth });
@@ -53,6 +60,7 @@ const generateTree = (level: number, itemCount: number, deckCount: number): { br
           cy: y,
           r: Math.random() * 1.5 + 2,
           delay: 1 + Math.random() * 1.5,
+          color: leafColor,
         });
     }
   }
@@ -60,14 +68,16 @@ const generateTree = (level: number, itemCount: number, deckCount: number): { br
   return { branches, leaves };
 };
 
-const KnowledgeTree: React.FC<KnowledgeTreeProps> = ({ level, streak, itemCount, deckCount }) => {
-    const { branches, leaves } = useMemo(() => generateTree(level, itemCount, deckCount), [level, itemCount, deckCount]);
+const KnowledgeTree: React.FC<KnowledgeTreeProps> = ({ level, streak, itemCount, deckCount, equippedItems }) => {
+    const { branches, leaves } = useMemo(() => generateTree(level, itemCount, deckCount, equippedItems.tree), [level, itemCount, deckCount, equippedItems.tree]);
     const hasGlow = streak >= 5;
+
+    const companion = useMemo(() => STORE_ITEMS.find(item => item.id === equippedItems.companion), [equippedItems.companion]);
 
   return (
     <div className="relative w-full max-w-sm mx-auto aspect-square flex items-center justify-center my-4">
         {hasGlow && <div className="absolute inset-0 bg-yellow-300/10 blur-3xl rounded-full animate-pulse" style={{animationDuration: '4s'}} />}
-      <svg viewBox="0 0 300 300" className="w-full h-full">
+      <svg viewBox="0 0 300 300" className="w-full h-full" style={{ overflow: 'visible' }}>
         <style>
           {`
             @keyframes grow-branch {
@@ -99,6 +109,11 @@ const KnowledgeTree: React.FC<KnowledgeTreeProps> = ({ level, streak, itemCount,
                 </feMerge>
             </filter>
         </defs>
+        {companion && (
+          <text x="220" y="240" fontSize="40" className="companion-animate" style={{ userSelect: 'none' }}>
+              {companion.icon}
+          </text>
+        )}
         <g>
           {branches.map((branch, i) => (
             <path
@@ -120,7 +135,7 @@ const KnowledgeTree: React.FC<KnowledgeTreeProps> = ({ level, streak, itemCount,
                 cx={leaf.cx}
                 cy={leaf.cy}
                 r={leaf.r}
-                fill="#E6F0C6"
+                fill={leaf.color}
                 className="leaf"
                 style={{ animationDelay: `${leaf.delay}s` }}
                 />

@@ -40,7 +40,7 @@ const AchievementCard: React.FC<{ achievement: Achievement }> = ({ achievement }
 
 const AchievementsPage: React.FC<AchievementsPageProps> = ({ achievements, onBack }) => {
   return (
-    <div className="px-6 space-y-4 animate-fade-in pb-24">
+    <div className="px-6 space-y-4 animate-fade-in pb-6">
       <div className="mt-4 flex justify-between items-center">
         <button onClick={onBack} className="flex items-center space-x-2 text-sm text-gray-400 hover:text-white transition-colors">
           <ArrowLeftIcon />

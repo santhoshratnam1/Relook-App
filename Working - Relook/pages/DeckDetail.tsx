@@ -1,7 +1,8 @@
 import React from 'react';
-import { Deck, Item, SourceType } from '../types';
+import { Deck, Item, SourceType, ContentType } from '../types';
 import DashboardCard from '../components/DashboardCard';
 import { ScreenshotIcon } from '../components/IconComponents';
+import ImageLoader from '../components/ImageLoader';
 
 interface DeckDetailProps {
   deckId: string;
@@ -52,7 +53,7 @@ const DeckDetail: React.FC<DeckDetailProps> = ({ deckId, decks, items, onNavigat
             <DashboardCard className="hover:scale-[1.01]">
                 <div className="flex items-start space-x-4">
                     {item.thumbnail_url ? (
-                        <img src={item.thumbnail_url} alt={item.title} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
+                        <ImageLoader src={item.thumbnail_url} alt={item.title} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
                     ) : (
                         <div className="w-16 h-16 rounded-xl bg-gray-700/50 flex items-center justify-center flex-shrink-0">
                            <SourceIcon type={item.source_type} />
@@ -62,9 +63,20 @@ const DeckDetail: React.FC<DeckDetailProps> = ({ deckId, decks, items, onNavigat
                         <p className="font-bold text-white line-clamp-2">{item.title}</p>
                         <p className="text-sm text-gray-400 line-clamp-2 mt-1">{item.body}</p>
                         <div className="mt-2">
-                             <span className="text-xs capitalize px-2 py-1 rounded-full bg-gradient-to-r from-[#e6f0c630] to-[#f6f2d830] text-[#E6F0C6]">
+                            {item.content_type === ContentType.Recipe && item.recipe_data ? (
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs capitalize px-2 py-1 rounded-full bg-gradient-to-r from-[#e6f0c630] to-[#f6f2d830] text-[#E6F0C6]">
+                                  {item.content_type}
+                                </span>
+                                <span className="text-xs px-2 py-1 rounded-full bg-orange-500/20 text-orange-300 flex items-center gap-1">
+                                  🍳 {item.recipe_data.ingredients.length} ingredients
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-xs capitalize px-2 py-1 rounded-full bg-gradient-to-r from-[#e6f0c630] to-[#f6f2d830] text-[#E6F0C6]">
                                 {item.content_type}
-                            </span>
+                              </span>
+                            )}
                         </div>
                     </div>
                 </div>

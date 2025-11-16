@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User } from '../types';
 import { ArrowLeftIcon } from '../components/IconComponents';
+import ImageLoader from '../components/ImageLoader';
 
 interface ProfilePageProps {
   user: User;
@@ -32,7 +33,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdateUser, onBack })
         
         <form onSubmit={handleSubmit} className="space-y-6 pt-4">
             <div className="flex items-center space-x-4">
-                <img src={avatarUrl} alt={displayName} className="w-20 h-20 rounded-full border-2 border-white/20" />
+                <ImageLoader src={avatarUrl} alt={displayName} className="w-20 h-20 rounded-full border-2 border-white/20" />
                 <div className="flex-1">
                     <label htmlFor="avatar-url" className="text-sm font-semibold text-gray-300">Avatar URL</label>
                     <input

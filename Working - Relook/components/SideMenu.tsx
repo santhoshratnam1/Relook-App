@@ -1,6 +1,7 @@
 import React from 'react';
 import { User, Rewards } from '../types';
 import { XIcon } from './IconComponents';
+import ImageLoader from './ImageLoader';
 
 interface SideMenuProps {
   isOpen: boolean;
@@ -35,7 +36,7 @@ const SideMenu: React.FC<SideMenuProps> = ({ isOpen, onClose, user, rewards, onN
             className="flex items-center space-x-3 p-3 rounded-lg bg-white/5 cursor-pointer hover:bg-white/10"
             onClick={() => handleNavigate('/profile')}
           >
-            <img src={user.avatar_url} alt={user.display_name} className="w-12 h-12 rounded-full" />
+            <ImageLoader src={user.avatar_url} alt={user.display_name} className="w-12 h-12 rounded-full" />
             <div>
               <p className="font-bold text-white">{user.display_name}</p>
               <p className="text-sm text-gray-400">Level {rewards.level}</p>
@@ -43,14 +44,14 @@ const SideMenu: React.FC<SideMenuProps> = ({ isOpen, onClose, user, rewards, onN
           </div>
           
           <div className="space-y-2 pt-4 border-t border-white/10">
+            <button onClick={() => handleNavigate('/my-stuff')} className="w-full text-left p-3 rounded-lg hover:bg-white/10 text-white transition-colors">
+              My Stuff
+            </button>
             <button onClick={() => handleNavigate('/profile')} className="w-full text-left p-3 rounded-lg hover:bg-white/10 text-white transition-colors">
               Profile & Settings
             </button>
             <button className="w-full text-left p-3 rounded-lg hover:bg-white/10 text-white transition-colors">
               Export Data
-            </button>
-            <button className="w-full text-left p-3 rounded-lg hover:bg-white/10 text-white transition-colors">
-              Help & Support
             </button>
             <button className="w-full text-left p-3 rounded-lg hover:bg-white/10 text-white transition-colors">
               About RELOOK

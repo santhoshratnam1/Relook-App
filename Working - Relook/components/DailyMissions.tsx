@@ -12,13 +12,13 @@ const MissionItem: React.FC<{ mission: Mission }> = ({ mission }) => {
   const percentage = isComplete ? 100 : (mission.progress / mission.goal) * 100;
 
   return (
-    <div className={`p-3 rounded-lg ${isComplete ? 'bg-green-500/20' : 'bg-[#0C0D0F]'}`}>
+    <div className={`p-3 rounded-xl ${isComplete ? 'bg-green-500/20' : 'sub-card'}`}>
       <div className="flex justify-between items-start">
-        <div>
+        <div className="flex-1">
           <p className={`font-bold ${isComplete ? 'text-green-300' : 'text-white'}`}>{mission.title}</p>
           <p className="text-sm text-gray-400 mt-1">{mission.description}</p>
         </div>
-        <span className={`font-bold text-sm ${isComplete ? 'text-green-300' : 'text-[#E6F0C6]'}`}>+{mission.xp} XP</span>
+        <span className={`font-bold text-sm ml-3 flex-shrink-0 ${isComplete ? 'text-green-300' : 'text-[#E6F0C6]'}`}>+{mission.xp} XP</span>
       </div>
       <div className="mt-3">
         <div className="w-full h-2 bg-gray-200/10 rounded-full overflow-hidden">
@@ -32,13 +32,12 @@ const MissionItem: React.FC<{ mission: Mission }> = ({ mission }) => {
   );
 };
 
-
 const DailyMissions: React.FC<DailyMissionsProps> = ({ missions }) => {
   if (!missions || missions.length === 0) return null;
 
   return (
-    <div className="px-6 my-4 animate-fade-in">
-      <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+    <div className="px-4">
+      <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
         <SparklesIcon /> Daily Missions
       </h3>
       <DashboardCard>

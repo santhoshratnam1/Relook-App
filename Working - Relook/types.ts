@@ -5,6 +5,7 @@ export enum ContentType {
   Quote = 'quote',
   Meme = 'meme',
   Job = 'job',
+  Recipe = 'recipe',
   Other = 'other',
 }
 
@@ -35,6 +36,15 @@ export interface Rewards {
   last_activity: Date;
 }
 
+export interface RecipeData {
+  ingredients: string[];
+  steps: string[];
+  prepTime?: string;
+  cookTime?: string;
+  servings?: string;
+  difficulty?: 'easy' | 'medium' | 'hard';
+}
+
 export interface Item {
   id: string;
   user_id: string;
@@ -47,6 +57,7 @@ export interface Item {
   status: ItemStatus;
   reminder_id?: string;
   deck_ids?: string[];
+  recipe_data?: RecipeData;
 }
 
 export interface Deck {

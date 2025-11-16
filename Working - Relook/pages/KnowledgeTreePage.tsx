@@ -7,9 +7,10 @@ interface KnowledgeTreePageProps {
   rewards: Rewards;
   itemCount: number;
   deckCount: number;
+  equippedItems: { [key: string]: string };
 }
 
-const KnowledgeTreePage: React.FC<KnowledgeTreePageProps> = ({ user, rewards, itemCount, deckCount }) => {
+const KnowledgeTreePage: React.FC<KnowledgeTreePageProps> = ({ user, rewards, itemCount, deckCount, equippedItems }) => {
   const xpForNextLevel = 1000 * rewards.level;
   
   return (
@@ -20,14 +21,15 @@ const KnowledgeTreePage: React.FC<KnowledgeTreePageProps> = ({ user, rewards, it
         </div>
 
         <KnowledgeTree 
-            key={rewards.level}
+            key={`${rewards.level}-${equippedItems.tree}-${equippedItems.companion}`}
             level={rewards.level} 
             streak={rewards.streak}
             itemCount={itemCount}
             deckCount={deckCount}
+            equippedItems={equippedItems}
         />
 
-        <div className="bg-[#1a1b1e] p-4 rounded-2xl border border-white/10 text-center">
+        <div className="sub-card p-4 rounded-2xl border border-white/10 text-center">
             <p className="font-bold text-white text-lg">Level {rewards.level}</p>
             <p className="text-sm text-gray-400">{rewards.xp} / {xpForNextLevel} XP to next level</p>
             {rewards.streak > 0 && 

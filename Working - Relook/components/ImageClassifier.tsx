@@ -1,16 +1,24 @@
 import React, { useState, useRef } from 'react';
 import DashboardCard from './DashboardCard';
 import { classifyImageContent } from '../services/geminiService';
-import { ContentType, SourceType, ExtractedEvent } from '../types';
+import { ContentType, SourceType, ExtractedEvent, RecipeData } from '../types';
 import { PhotoIcon, SparklesIcon, BellIcon } from './IconComponents';
 
 interface ImageClassifierProps {
-    onItemAdded: (data: { title: string; body: string; content_type: ContentType; source_type: SourceType; extractedEvent: ExtractedEvent | null }) => void;
+    onItemAdded: (data: { 
+        title: string; 
+        body: string; 
+        content_type: ContentType; 
+        source_type: SourceType; 
+        extractedEvent: ExtractedEvent | null;
+        recipeData?: RecipeData | null;
+    }) => void;
 }
 
 type ResultState = {
     classification: { category: ContentType; title: string; summary: string; body: string; };
     extractedEvent: ExtractedEvent | null;
+    recipeData: RecipeData | null;
 } | null;
 
 const ImageClassifier: React.FC<ImageClassifierProps> = ({ onItemAdded }) => {
@@ -69,12 +77,13 @@ const ImageClassifier: React.FC<ImageClassifierProps> = ({ onItemAdded }) => {
             content_type: result.classification.category,
             source_type: SourceType.Screenshot,
             extractedEvent: result.extractedEvent,
+            recipeData: result.recipeData,
         });
         resetState();
     }
 
     return (
-        <div className="px-6 my-4">
+        <div className="px-4 mb-3">
             <DashboardCard>
                 <div className="space-y-4">
                     <input
@@ -88,7 +97,7 @@ const ImageClassifier: React.FC<ImageClassifierProps> = ({ onItemAdded }) => {
                     {!preview && (
                          <button
                             onClick={() => fileInputRef.current?.click()}
-                            className="w-full flex justify-center items-center space-x-2 font-bold py-3 px-4 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                            className="w-full flex justify-center items-center space-x-2 font-semibold py-3 px-4 rounded-xl bg-white/10 hover:bg-white/15 active:scale-98 transition-all"
                         >
                            <PhotoIcon className="w-5 h-5"/>
                            <span>Classify Image / Screenshot</span>
@@ -123,29 +132,37 @@ const ImageClassifier: React.FC<ImageClassifierProps> = ({ onItemAdded }) => {
                                      {result.extractedEvent && (
                                         <span className="text-xs flex items-center space-x-1 text-cyan-300">
                                             <BellIcon className="w-4 h-4" />
-                                            <span>Reminder Detected</span>
+                                            <span>Reminder</span>
                                         </span>
                                     )}
                                 </div>
                             </div>
 
-                            <details className="mt-3 group">
-                                <summary className="p-3 cursor-pointer text-sm font-semibold text-gray-400 list-none flex justify-between items-center bg-[#0C0D0F] rounded-lg border border-white/10 group-open:rounded-b-none">
-                                    <span>View Extracted Text (OCR)</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 transition-transform duration-200 group-open:rotate-180">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                                    </svg>
-                                </summary>
-                                <div className="p-3 pt-2 text-sm text-gray-300 max-h-32 overflow-y-auto bg-[#0C0D0F] rounded-b-lg border border-t-0 border-white/10">
-                                    <p className="whitespace-pre-wrap">{result.classification.body}</p>
-                                </div>
-                            </details>
+                            {result.classification.body && (
+                                <details className="mt-3 group">
+                                    <summary className="p-3 cursor-pointer text-sm font-semibold text-gray-400 list-none flex justify-between items-center bg-[#0C0D0F] rounded-lg border border-white/10 group-open:rounded-b-none active:scale-98 transition-transform">
+                                        <span>View Extracted Text</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 transition-transform duration-200 group-open:rotate-180">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                        </svg>
+                                    </summary>
+                                    <div className="p-3 pt-2 text-sm text-gray-300 max-h-32 overflow-y-auto bg-[#0C0D0F] rounded-b-lg border border-t-0 border-white/10">
+                                        <p className="whitespace-pre-wrap">{result.classification.body}</p>
+                                    </div>
+                                </details>
+                            )}
 
                             <div className="mt-4 flex space-x-2">
-                                <button onClick={() => resetState()} className="w-full font-semibold py-2 px-4 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                                <button 
+                                    onClick={() => resetState()} 
+                                    className="w-full font-semibold py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 active:scale-98 transition-all"
+                                >
                                     Clear
                                 </button>
-                                <button onClick={handleSave} className="w-full font-bold py-2 px-4 rounded-full bg-gradient-to-r from-[#E6F0C6] to-[#F6F2D8] text-black hover:opacity-90 transition-opacity">
+                                <button 
+                                    onClick={handleSave} 
+                                    className="w-full font-bold py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#E6F0C6] to-[#F6F2D8] text-black hover:opacity-90 active:scale-98 transition-all"
+                                >
                                     Save to Inbox
                                 </button>
                             </div>

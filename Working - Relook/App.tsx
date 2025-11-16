@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Header from './components/Header';
 import Navigation from './components/Navigation';
 import Dashboard from './pages/Dashboard';
@@ -15,7 +15,10 @@ import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import RewardModal from './components/RewardModal';
 import AchievementsPage from './pages/AchievementsPage';
-import { User, Rewards, Item, Reminder, ContentType, ItemStatus, SourceType, ExtractedEvent, Deck, Mission, MissionType, Achievement } from './types';
+import StorePage from './pages/StorePage';
+import MyStuffPage from './pages/MyStuffPage';
+import { User, Rewards, Item, Reminder, ContentType, ItemStatus, SourceType, ExtractedEvent, Deck, Mission, MissionType, Achievement, RecipeData } from './types';
+import { StoreItem } from './data/store';
 import { DAILY_MISSIONS_BLUEPRINT } from './data/missions';
 import { ACHIEVEMENTS_BLUEPRINT } from './data/achievements';
 
@@ -25,7 +28,7 @@ const initialUser: User = {
   avatar_url: 'https://picsum.photos/seed/relookuser/100/100',
 };
 
-const initialRewards: Rewards = { xp: 450, level: 3, streak: 5, last_activity: new Date(0) };
+const initialRewards: Rewards = { xp: 10000, level: 3, streak: 5, last_activity: new Date(0) };
 const initialItems: Item[] = [];
 const initialReminders: Reminder[] = [];
 const initialDecks: Deck[] = [];
@@ -69,6 +72,9 @@ const App: React.FC = () => {
   const [achievements, setAchievements] = useState<Achievement[]>(() => JSON.parse(localStorage.getItem('relook-achievements') || '[]'));
   const [showRewardModal, setShowRewardModal] = useState(false);
   const [earnedReward, setEarnedReward] = useState<Achievement | null>(null);
+  const [equippedItems, setEquippedItems] = useState<{[key: string]: string}>(() => {
+    return JSON.parse(localStorage.getItem('relook-equipped-items') || '{}');
+  });
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -84,7 +90,70 @@ const App: React.FC = () => {
     localStorage.setItem('relook-missions-date', new Date().toISOString());
   }, [missions]);
   useEffect(() => { localStorage.setItem('relook-achievements', JSON.stringify(achievements)); }, [achievements]);
+  
+  useEffect(() => {
+    localStorage.setItem('relook-equipped-items', JSON.stringify(equippedItems));
 
+    const theme = equippedItems.theme;
+    const root = document.documentElement;
+    root.classList.remove('theme-ocean-depths', 'theme-sunset-glow');
+    if (theme === 'theme_dark_ocean') {
+        root.classList.add('theme-ocean-depths');
+    } else if (theme === 'theme_sunset') {
+        root.classList.add('theme-sunset-glow');
+    }
+  }, [equippedItems]);
+
+  const updateRewards = useCallback((xpToAdd: number) => {
+    setRewards(prev => {
+      let newXp = prev.xp + xpToAdd;
+      let newLevel = prev.level;
+      let xpForNextLevel = XP_BASE_PER_LEVEL * newLevel;
+      while (newXp >= xpForNextLevel) {
+        newLevel++;
+        newXp -= xpForNextLevel;
+        xpForNextLevel = XP_BASE_PER_LEVEL * newLevel;
+      }
+      
+      const now = new Date();
+      const lastActivity = new Date(prev.last_activity);
+      let newStreak = prev.streak;
+      if (!isSameDay(lastActivity, now)) {
+        const yesterday = new Date();
+        yesterday.setDate(now.getDate() - 1);
+        newStreak = isSameDay(lastActivity, yesterday) ? prev.streak + 1 : 1;
+      }
+
+      return { ...prev, xp: newXp, level: newLevel, streak: newStreak, last_activity: new Date() };
+    });
+  }, []);
+
+  const checkAchievements = useCallback((itemCount: number, deckCount: number, streak: number) => {
+    setAchievements(prev => prev.map(achievement => {
+      if (achievement.unlocked) return achievement;
+      
+      let newProgress = achievement.progress;
+      if (achievement.id === 'first_steps') newProgress = itemCount;
+      if (achievement.id === 'organizer') newProgress = deckCount;
+      if (achievement.id === 'streak_7') newProgress = streak;
+      if (achievement.id === 'streak_30') newProgress = streak;
+      
+      const justUnlocked = !achievement.unlocked && newProgress >= achievement.goal;
+      if (justUnlocked) {
+        setEarnedReward(achievement);
+        setShowRewardModal(true);
+        if (achievement.reward.includes('XP')) {
+          const xpAmount = parseInt(achievement.reward.split('+')[1].trim().split(' ')[0]);
+          if (!isNaN(xpAmount)) {
+            updateRewards(xpAmount);
+          }
+        }
+        return { ...achievement, progress: achievement.goal, unlocked: true };
+      }
+      
+      return { ...achievement, progress: newProgress };
+    }));
+  }, [updateRewards]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -110,30 +179,29 @@ const App: React.FC = () => {
       setAchievements(ACHIEVEMENTS_BLUEPRINT.map(a => ({ ...a, progress: 0, unlocked: false })));
     }
     checkAchievements(items.length, decks.length, rewards.streak);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
+  }, [isAuthenticated, achievements.length, checkAchievements, decks.length, items.length, missions.length, rewards.last_activity, rewards.streak]);
 
-  const handleLogin = () => {
+  const handleLogin = useCallback(() => {
     setIsAuthenticated(true);
     setCurrentPath('/');
     setNavHistory(['/']);
-  };
+  }, []);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     setIsAuthenticated(false);
-  };
+  }, []);
 
-  const handleUpdateUser = (updatedUser: { display_name: string; avatar_url: string; }) => {
+  const handleUpdateUser = useCallback((updatedUser: { display_name: string; avatar_url: string; }) => {
     setUser(prev => ({ ...prev, ...updatedUser }));
-  };
+  }, []);
 
-  const handleNavigate = (path: string) => {
+  const handleNavigate = useCallback((path: string) => {
     if (path === currentPath) return;
     setNavHistory(prev => [...prev, path]);
     setCurrentPath(path);
-  };
+  }, [currentPath]);
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     if (navHistory.length > 1) {
       const newHistory = [...navHistory];
       newHistory.pop();
@@ -141,60 +209,9 @@ const App: React.FC = () => {
       setNavHistory(newHistory);
       setCurrentPath(prevPath);
     }
-  };
+  }, [navHistory]);
 
-  const updateRewards = (xpToAdd: number) => {
-    setRewards(prev => {
-      let newXp = prev.xp + xpToAdd;
-      let newLevel = prev.level;
-      let xpForNextLevel = XP_BASE_PER_LEVEL * newLevel;
-      while (newXp >= xpForNextLevel) {
-        newLevel++;
-        newXp -= xpForNextLevel;
-        xpForNextLevel = XP_BASE_PER_LEVEL * newLevel;
-      }
-      
-      const now = new Date();
-      const lastActivity = new Date(prev.last_activity);
-      let newStreak = prev.streak;
-      if (!isSameDay(lastActivity, now)) {
-        const yesterday = new Date();
-        yesterday.setDate(now.getDate() - 1);
-        newStreak = isSameDay(lastActivity, yesterday) ? prev.streak + 1 : 1;
-      }
-
-      return { ...prev, xp: newXp, level: newLevel, streak: newStreak, last_activity: new Date() };
-    });
-  }
-
-  const checkAchievements = (itemCount: number, deckCount: number, streak: number) => {
-    setAchievements(prev => prev.map(achievement => {
-      if (achievement.unlocked) return achievement;
-      
-      let newProgress = achievement.progress;
-      if (achievement.id === 'first_steps') newProgress = itemCount;
-      if (achievement.id === 'organizer') newProgress = deckCount;
-      if (achievement.id === 'streak_7') newProgress = streak;
-      if (achievement.id === 'streak_30') newProgress = streak;
-      
-      const justUnlocked = !achievement.unlocked && newProgress >= achievement.goal;
-      if (justUnlocked) {
-        setEarnedReward(achievement);
-        setShowRewardModal(true);
-        if (achievement.reward.includes('XP')) {
-          const xpAmount = parseInt(achievement.reward.split('+')[1].trim().split(' ')[0]);
-          if (!isNaN(xpAmount)) {
-            updateRewards(xpAmount);
-          }
-        }
-        return { ...achievement, progress: achievement.goal, unlocked: true };
-      }
-      
-      return { ...achievement, progress: newProgress };
-    }));
-  };
-
-  const updateMissionProgress = (missionId: MissionType, amount = 1) => {
+  const updateMissionProgress = useCallback((missionId: MissionType, amount = 1) => {
     setMissions(prevMissions => {
         let missionJustCompleted = false;
         const newMissions = prevMissions.map(m => {
@@ -216,9 +233,9 @@ const App: React.FC = () => {
         }
         return newMissions;
     });
-  }
+  }, [updateRewards]);
 
-  const handleAddItem = (data: { title: string; body: string; content_type: ContentType; source_type: SourceType; extractedEvent: ExtractedEvent | null }) => {
+  const handleAddItem = useCallback((data: { title: string; body: string; content_type: ContentType; source_type: SourceType; extractedEvent: ExtractedEvent | null; recipeData?: RecipeData | null; }) => {
     if (undoState) clearTimeout(undoState.timeoutId);
     
     const previousRewards = { ...rewards };
@@ -229,6 +246,7 @@ const App: React.FC = () => {
       id: newItemId, user_id: user.id, created_at: new Date(), status: ItemStatus.New,
       thumbnail_url: data.source_type === SourceType.Screenshot ? `https://picsum.photos/seed/${Date.now()}/200/200` : undefined,
       title: data.title, body: data.body, content_type: data.content_type, source_type: data.source_type,
+      recipe_data: data.recipeData || undefined,
     };
     
     if (data.extractedEvent) {
@@ -248,18 +266,18 @@ const App: React.FC = () => {
 
     const timeoutId = window.setTimeout(() => setUndoState(null), 5000);
     setUndoState({ item: newItem, reminder: newReminder, previousRewards, timeoutId });
-  };
+  }, [undoState, rewards, user.id, items, checkAchievements, decks.length, updateMissionProgress, updateRewards]);
 
-  const handleUndo = () => {
+  const handleUndo = useCallback(() => {
     if (!undoState) return;
     clearTimeout(undoState.timeoutId);
     setItems(prev => prev.filter(i => i.id !== undoState.item.id));
     if (undoState.reminder) setReminders(prev => prev.filter(r => r.id !== undoState.reminder!.id));
     setRewards(undoState.previousRewards);
     setUndoState(null);
-  };
+  }, [undoState]);
 
-  const handleCreateDeck = (deckData: { title: string; description: string }) => {
+  const handleCreateDeck = useCallback((deckData: { title: string; description: string }) => {
     const newDeck: Deck = {
       id: `deck-${Date.now()}`,
       user_id: user.id,
@@ -271,9 +289,9 @@ const App: React.FC = () => {
     setDecks(newDecks);
     updateRewards(XP_PER_DECK_CREATE);
     checkAchievements(items.length, newDecks.length, rewards.streak);
-  };
+  }, [user.id, decks, items.length, rewards.streak, checkAchievements, updateRewards]);
 
-  const handleAddItemToDeck = (itemId: string, deckId: string) => {
+  const handleAddItemToDeck = useCallback((itemId: string, deckId: string) => {
     const item = items.find(i => i.id === itemId);
     if (!item || item.deck_ids?.includes(deckId)) return;
 
@@ -285,9 +303,9 @@ const App: React.FC = () => {
 
     updateRewards(XP_PER_ADD_TO_DECK);
     updateMissionProgress(MissionType.ORGANIZE_ITEM);
-  };
+  }, [items, updateMissionProgress, updateRewards]);
 
-  const handleAutoAddItemToDeck = (item: Item) => {
+  const handleAutoAddItemToDeck = useCallback((item: Item) => {
     const suggestedDeckName = `${item.content_type.charAt(0).toUpperCase() + item.content_type.slice(1)} Collection`;
     const existingDeck = decks.find(d => d.title.toLowerCase().includes(item.content_type.toLowerCase()));
     
@@ -312,10 +330,10 @@ const App: React.FC = () => {
       updateMissionProgress(MissionType.ORGANIZE_ITEM);
       checkAchievements(items.length, newDecks.length, rewards.streak);
     }
-  };
+  }, [decks, user.id, items.length, rewards.streak, handleAddItemToDeck, updateRewards, updateMissionProgress, checkAchievements]);
 
 
-  const handleCompleteReminder = (reminderId: string) => {
+  const handleCompleteReminder = useCallback((reminderId: string) => {
     const reminder = reminders.find(r => r.id === reminderId);
     if (!reminder) return;
     
@@ -327,15 +345,15 @@ const App: React.FC = () => {
       updateRewards(mission.xp);
       updateMissionProgress(MissionType.COMPLETE_REMINDER);
     }
-  };
+  }, [reminders, updateMissionProgress, updateRewards]);
 
-  const handleUpdateItem = (itemId: string, data: { title: string, body: string }) => {
+  const handleUpdateItem = useCallback((itemId: string, data: { title: string, body: string }) => {
     setItems(prevItems => prevItems.map(item => 
       item.id === itemId ? { ...item, ...data } : item
     ));
-  };
+  }, []);
 
-  const handleDeleteItem = (itemId: string) => {
+  const handleDeleteItem = useCallback((itemId: string) => {
     const itemToDelete = items.find(i => i.id === itemId);
     if (!itemToDelete) return;
 
@@ -343,7 +361,25 @@ const App: React.FC = () => {
     if (itemToDelete.reminder_id) {
       setReminders(prevReminders => prevReminders.filter(r => r.id !== itemToDelete.reminder_id));
     }
-  };
+  }, [items]);
+
+  const handlePurchase = useCallback((itemId: string, price: number) => {
+    setRewards(prev => {
+      const newXp = Math.max(0, prev.xp - price);
+      return { ...prev, xp: newXp };
+    });
+    console.log(`Purchased ${itemId} for ${price} XP`);
+  }, []);
+  
+  const handleEquipItem = useCallback((item: StoreItem) => {
+    setEquippedItems(prev => ({
+        ...prev,
+        [item.type]: item.id === prev[item.type] ? null : item.id
+    }));
+  }, []);
+
+  const recentItems = useMemo(() => items.slice(0, 3), [items]);
+  const newInboxItems = useMemo(() => items.filter(i => i.status === ItemStatus.New), [items]);
 
   if (!isAuthenticated) {
     return <LoginPage onLogin={handleLogin} />;
@@ -372,11 +408,20 @@ const App: React.FC = () => {
 
     switch (currentPath) {
       case '/':
-        return <Dashboard user={user} rewards={rewards} recentItems={items.slice(0, 3)} onItemAdded={handleAddItem} missions={missions} onNavigate={handleNavigate} />;
+        return <Dashboard 
+          user={user} 
+          rewards={rewards} 
+          recentItems={recentItems} 
+          onItemAdded={handleAddItem} 
+          missions={missions} 
+          achievements={achievements}
+          onNavigate={handleNavigate} 
+          equippedItems={equippedItems}
+        />;
       case '/inbox':
-        return <Inbox items={items.filter(i => i.status === ItemStatus.New)} decks={decks} onAutoAddItemToDeck={handleAutoAddItemToDeck} onDeleteItem={handleDeleteItem} onNavigate={handleNavigate} />;
+        return <Inbox items={newInboxItems} decks={decks} onAutoAddItemToDeck={handleAutoAddItemToDeck} onDeleteItem={handleDeleteItem} onNavigate={handleNavigate} />;
       case '/tree':
-        return <KnowledgeTreePage user={user} rewards={rewards} itemCount={items.length} deckCount={decks.length} />;
+        return <KnowledgeTreePage user={user} rewards={rewards} itemCount={items.length} deckCount={decks.length} equippedItems={equippedItems} />;
       case '/decks':
         return <DecksPage decks={decks} items={items} onCreateDeck={handleCreateDeck} onNavigate={handleNavigate} />;
       case '/reminders':
@@ -385,13 +430,30 @@ const App: React.FC = () => {
         return <ProfilePage user={user} onUpdateUser={handleUpdateUser} onBack={handleBack} />;
       case '/achievements':
         return <AchievementsPage achievements={achievements} onBack={handleBack} />;
+      case '/store':
+        return <StorePage user={user} rewards={rewards} onBack={handleBack} onPurchase={handlePurchase} />;
+      case '/my-stuff':
+        return <MyStuffPage equippedItems={equippedItems} onEquipItem={handleEquipItem} onBack={handleBack} />;
       default:
-        return <Dashboard user={user} rewards={rewards} recentItems={items.slice(0, 3)} onItemAdded={handleAddItem} missions={missions} onNavigate={handleNavigate} />;
+        return <Dashboard 
+          user={user} 
+          rewards={rewards} 
+          recentItems={recentItems} 
+          onItemAdded={handleAddItem} 
+          missions={missions} 
+          achievements={achievements}
+          onNavigate={handleNavigate} 
+          equippedItems={equippedItems}
+        />;
     }
   };
 
   return (
-    <div className="bg-[#0C0D0F] text-white min-h-screen font-sans pb-24 max-w-md mx-auto">
+    <div className="bg-bg-color text-white min-h-screen font-sans w-full" style={{ 
+      maxWidth: '100vw', 
+      overflowX: 'hidden',
+      paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' // Account for nav + safe area
+    }}>
       <Header onMenuClick={() => setIsMenuOpen(true)} onSearchClick={() => setIsSearchOpen(true)} />
       <SideMenu 
         isOpen={isMenuOpen} 
@@ -401,7 +463,7 @@ const App: React.FC = () => {
         onNavigate={handleNavigate}
         onLogout={handleLogout}
       />
-      <main>
+      <main className="safe-area-top">
         {renderPage()}
       </main>
       {undoState && <UndoNotification onUndo={handleUndo} />}

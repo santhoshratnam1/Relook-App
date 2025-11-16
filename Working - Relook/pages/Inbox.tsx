@@ -1,8 +1,9 @@
 import React from 'react';
-import { Item, SourceType, Deck } from '../types';
+import { Item, SourceType, Deck, ContentType } from '../types';
 import DashboardCard from '../components/DashboardCard';
 import { ScreenshotIcon } from '../components/IconComponents';
 import SwipeableItemCard from '../components/SwipeableItemCard';
+import ImageLoader from '../components/ImageLoader';
 
 interface InboxProps {
   items: Item[];
@@ -26,7 +27,7 @@ const Inbox: React.FC<InboxProps> = ({ items, decks, onAutoAddItemToDeck, onDele
 
   return (
     <>
-      <div className="px-6 space-y-4 pb-24">
+      <div className="px-6 space-y-4 pb-6">
           <h2 className="text-2xl font-bold text-white mt-4">Inbox</h2>
           {items.length === 0 && (
               <p className="text-gray-400 text-center py-8">Your inbox is empty. Add items from the Home screen.</p>
@@ -42,7 +43,7 @@ const Inbox: React.FC<InboxProps> = ({ items, decks, onAutoAddItemToDeck, onDele
                 <DashboardCard>
                     <div className="flex items-start space-x-4">
                         {item.thumbnail_url ? (
-                            <img src={item.thumbnail_url} alt={item.title} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
+                            <ImageLoader src={item.thumbnail_url} alt={item.title} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
                         ) : (
                             <div className="w-16 h-16 rounded-xl bg-gray-700/50 flex items-center justify-center flex-shrink-0">
                                <SourceIcon type={item.source_type} />
@@ -52,9 +53,20 @@ const Inbox: React.FC<InboxProps> = ({ items, decks, onAutoAddItemToDeck, onDele
                             <p className="font-bold text-white line-clamp-2">{item.title}</p>
                             <p className="text-sm text-gray-400 line-clamp-2 mt-1">{item.body}</p>
                             <div className="mt-2 flex items-center flex-wrap gap-2">
-                                 <span className="text-xs capitalize px-2 py-1 rounded-full bg-gradient-to-r from-[#e6f0c630] to-[#f6f2d830] text-[#E6F0C6]">
+                                {item.content_type === ContentType.Recipe && item.recipe_data ? (
+                                  <>
+                                    <span className="text-xs capitalize px-2 py-1 rounded-full bg-gradient-to-r from-[#e6f0c630] to-[#f6f2d830] text-[#E6F0C6]">
+                                      {item.content_type}
+                                    </span>
+                                    <span className="text-xs px-2 py-1 rounded-full bg-orange-500/20 text-orange-300 flex items-center gap-1">
+                                      🍳 {item.recipe_data.ingredients.length} ingredients
+                                    </span>
+                                  </>
+                                ) : (
+                                  <span className="text-xs capitalize px-2 py-1 rounded-full bg-gradient-to-r from-[#e6f0c630] to-[#f6f2d830] text-[#E6F0C6]">
                                     {item.content_type}
-                                </span>
+                                  </span>
+                                )}
                                 {item.deck_ids?.map(deckId => {
                                   const deck = decksById.get(deckId);
                                   return deck ? <span key={deckId} className="text-xs px-2 py-1 rounded-full bg-slate-600 text-slate-200">{deck.title}</span> : null;

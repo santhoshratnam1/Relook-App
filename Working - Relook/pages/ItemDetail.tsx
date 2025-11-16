@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Item, Deck, SourceType } from '../types';
+import { Item, Deck, SourceType, ContentType } from '../types';
 import { ScreenshotIcon, ArrowLeftIcon, DotsVerticalIcon, EditIcon, TrashIcon, BookOpenIcon } from '../components/IconComponents';
 import AddToDeckModal from '../components/AddToDeckModal';
 import EditItemModal from '../components/EditItemModal';
+import RecipeView from '../components/RecipeView';
+import ImageLoader from '../components/ImageLoader';
 
 interface ItemDetailProps {
   itemId: string;
@@ -87,7 +89,7 @@ const ItemDetail: React.FC<ItemDetailProps> = ({ itemId, items, decks, onAddItem
         </div>
 
         {item.thumbnail_url && (
-            <img src={item.thumbnail_url} alt={item.title} className="w-full h-auto max-h-60 object-cover rounded-2xl border border-white/10" />
+            <ImageLoader src={item.thumbnail_url} alt={item.title} className="w-full h-auto max-h-60 object-cover rounded-2xl border border-white/10" />
         )}
         
         <div className="space-y-2">
@@ -97,9 +99,15 @@ const ItemDetail: React.FC<ItemDetailProps> = ({ itemId, items, decks, onAddItem
             <h1 className="text-3xl font-bold text-white">{item.title}</h1>
         </div>
         
-        <div className="text-gray-300 whitespace-pre-wrap leading-relaxed py-4 border-y border-white/10">
-            {item.body}
-        </div>
+        {item.content_type === ContentType.Recipe && item.recipe_data ? (
+            <div className="py-4 border-y border-white/10">
+                <RecipeView recipe={item.recipe_data} />
+            </div>
+        ) : (
+            <div className="text-gray-300 whitespace-pre-wrap leading-relaxed py-4 border-y border-white/10">
+                {item.body}
+            </div>
+        )}
 
         <div className="space-y-4">
             <div>
