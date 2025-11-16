@@ -1,6 +1,7 @@
 import React from 'react';
 import { JobData } from '../types';
 import InfoRow from './InfoRow';
+import { MapPinIcon } from './IconComponents';
 
 interface JobViewProps {
   job: JobData;
@@ -13,7 +14,16 @@ const JobView: React.FC<JobViewProps> = ({ job }) => {
             <InfoRow label="Role" value={job.role} icon="🧑‍💻" />
             <InfoRow label="Company" value={job.company} icon="🏢" />
             {job.companyDescription && <p className="text-sm text-gray-400 py-3 px-1">{job.companyDescription}</p>}
-            <InfoRow label="Location" value={job.location} icon="📍" />
+            <InfoRow 
+                label="Location" 
+                value={job.location} 
+                icon="📍"
+                action={job.location ? {
+                    icon: <MapPinIcon className="w-5 h-5"/>,
+                    onClick: () => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.location!)}`, '_blank'),
+                    ariaLabel: 'View location on map'
+                } : undefined}
+            />
             <InfoRow label="Type" value={job.jobType} icon="📄" />
             <InfoRow label="Work Mode" value={job.workMode} icon="🏠" />
             <InfoRow label="Salary" value={job.salary} icon="💰" />

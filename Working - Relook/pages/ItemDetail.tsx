@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Item, Deck, Reminder, SourceType, ContentType } from '../types';
 import { ScreenshotIcon, ArrowLeftIcon, DotsVerticalIcon, EditIcon, TrashIcon, BookOpenIcon, BellIcon } from '../components/IconComponents';
 import AddToDeckModal from '../components/AddToDeckModal';
@@ -32,6 +32,13 @@ interface ItemDetailProps {
   onBack: () => void;
 }
 
+interface YouTubeVideo {
+    url: string;
+    title: string;
+    author_name: string;
+    html: string;
+}
+
 const SourceInfo: React.FC<{ type: SourceType }> = ({ type }) => {
     const iconMap: Record<SourceType, React.ReactNode> = {
         [SourceType.Screenshot]: <ScreenshotIcon />,
@@ -52,9 +59,39 @@ const ItemDetail: React.FC<ItemDetailProps> = ({ itemId, items, decks, reminders
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAddToDeckOpen, setIsAddToDeckOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [youtubeVideos, setYoutubeVideos] = useState<YouTubeVideo[]>([]);
   
   const item = items.find(i => i.id === itemId);
   const decksById = new Map<string, Deck>(decks.map(d => [d.id, d]));
+  
+  useEffect(() => {
+    const findAndFetchYoutubeVideos = async () => {
+        if (!item) return;
+
+        const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/g;
+        
+        let foundUrls = new Set<string>();
+        
+        const allText = item.body + ' ' + (item.urls?.join(' ') || '');
+        let match;
+        while ((match = youtubeRegex.exec(allText)) !== null) {
+            foundUrls.add(`https://www.youtube.com/watch?v=${match[1]}`);
+        }
+
+        if (foundUrls.size > 0) {
+            try {
+                const videoPromises = Array.from(foundUrls).map(url => 
+                    fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`).then(res => res.json())
+                );
+                const videoData = await Promise.all(videoPromises);
+                setYoutubeVideos(videoData.filter(v => v && !v.error && v.html));
+            } catch (e) {
+                console.error("Failed to fetch YouTube oEmbed data", e);
+            }
+        }
+    };
+    findAndFetchYoutubeVideos();
+  }, [item]);
 
   if (!item) {
     return (
@@ -164,6 +201,29 @@ const ItemDetail: React.FC<ItemDetailProps> = ({ itemId, items, decks, reminders
                     </div>
                 </div>
             </div>
+
+            {youtubeVideos.length > 0 && (
+                <div>
+                    <h3 className="text-sm font-semibold text-gray-500 mb-2">LINKED MEDIA</h3>
+                    <div className="space-y-3">
+                        {youtubeVideos.map((video, index) => (
+                            video.html && (
+                                <div 
+                                    key={index} 
+                                    className="bg-[#1a1b1e] border border-white/10 rounded-2xl p-4 space-y-3"
+                                >
+                                    <div 
+                                        className="aspect-video rounded-lg overflow-hidden" 
+                                        dangerouslySetInnerHTML={{ __html: video.html.replace(/width="\d+"/, 'width="100%"').replace(/height="\d+"/, 'height="100%"') }} 
+                                    />
+                                    <a href={video.url} target="_blank" rel="noopener noreferrer" className="block font-bold text-white hover:underline text-sm">{video.title}</a>
+                                    <p className="text-xs text-gray-400">by {video.author_name}</p>
+                                </div>
+                            )
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {item.tags && item.tags.length > 0 && (
                 <div>

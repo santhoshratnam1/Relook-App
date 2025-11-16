@@ -1,6 +1,7 @@
 import React from 'react';
 import { TeamSpotlightData } from '../types';
 import InfoRow from './InfoRow';
+import { MapPinIcon } from './IconComponents';
 
 interface TeamSpotlightViewProps {
   spotlight: TeamSpotlightData;
@@ -13,7 +14,16 @@ const TeamSpotlightView: React.FC<TeamSpotlightViewProps> = ({ spotlight }) => {
         <InfoRow label="Role" value={spotlight.role} icon="🧑‍💻" />
         <InfoRow label="Department" value={spotlight.department} icon="🏢" />
         <InfoRow label="Experience" value={spotlight.experience} icon="📈" />
-        <InfoRow label="Location" value={spotlight.location} icon="📍" />
+        <InfoRow 
+            label="Location" 
+            value={spotlight.location} 
+            icon="📍" 
+            action={spotlight.location ? {
+                icon: <MapPinIcon className="w-5 h-5"/>,
+                onClick: () => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(spotlight.location!)}`, '_blank'),
+                ariaLabel: 'View location on map'
+            } : undefined}
+        />
         {spotlight.bio && <p className="text-sm text-gray-400 py-3 px-1">{spotlight.bio}</p>}
         <InfoRow 
             label="Skills" 
