@@ -47,6 +47,7 @@ const XP_BASE_PER_LEVEL = 1000;
 interface UndoState {
   item: Item;
   reminder?: Reminder;
+  createdDeckId?: string;
   previousRewards: Rewards;
   timeoutId: number;
 }
@@ -309,7 +310,7 @@ const App: React.FC = () => {
 
     let finalDecks = [...decks];
     let xpToAdd = XP_PER_ITEM;
-    let newDeckCreated = false;
+    let createdDeckId: string | undefined = undefined;
   
     const deckName = AUTO_ORGANIZE_CONFIG[newItem.content_type];
     if (deckName) {
@@ -324,11 +325,10 @@ const App: React.FC = () => {
           created_at: new Date(),
         };
         finalDecks.unshift(autoDeck);
-        newDeckCreated = true;
+        createdDeckId = autoDeck.id; // Capture the new deck's ID
       }
   
       newItem.deck_ids = [...(newItem.deck_ids || []), autoDeck.id];
-      newItem.status = ItemStatus.Reviewed;
   
       xpToAdd += XP_PER_ADD_TO_DECK;
       updateMissionProgress(MissionType.ORGANIZE_ITEM);
@@ -336,7 +336,7 @@ const App: React.FC = () => {
   
     const newItems = [newItem, ...items];
     setItems(newItems);
-    if (newDeckCreated) {
+    if (createdDeckId) { // Only update decks state if a new one was actually created
       setDecks(finalDecks);
     }
   
@@ -345,14 +345,19 @@ const App: React.FC = () => {
     checkAchievements(newItems.length, finalDecks.length, rewards.streak);
   
     const timeoutId = window.setTimeout(() => setUndoState(null), 5000);
-    setUndoState({ item: newItem, reminder: newReminder, previousRewards, timeoutId });
+    setUndoState({ item: newItem, reminder: newReminder, previousRewards, timeoutId, createdDeckId });
   }, [undoState, rewards, user.id, items, decks, checkAchievements, updateMissionProgress, updateRewards]);
 
   const handleUndo = useCallback(() => {
     if (!undoState) return;
     clearTimeout(undoState.timeoutId);
     setItems(prev => prev.filter(i => i.id !== undoState.item.id));
-    if (undoState.reminder) setReminders(prev => prev.filter(r => r.id !== undoState.reminder!.id));
+    if (undoState.reminder) {
+        setReminders(prev => prev.filter(r => r.id !== undoState.reminder!.id));
+    }
+    if (undoState.createdDeckId) { // If a deck was created for this item
+        setDecks(prev => prev.filter(d => d.id !== undoState.createdDeckId));
+    }
     setRewards(undoState.previousRewards);
     setUndoState(null);
   }, [undoState]);
@@ -433,53 +438,75 @@ const App: React.FC = () => {
     const itemToUpdate = items.find(i => i.id === itemId);
     if (!itemToUpdate) return;
   
+    // 1. Optimistically update the item with the user's direct text edits.
+    const itemWithUserEdits = { ...itemToUpdate, ...data };
+    setItems(prevItems => prevItems.map(item => item.id === itemId ? itemWithUserEdits : item));
+  
     try {
+      // 2. Re-classify content with Gemini in the background.
       const classificationResult = await classifyContent(data.body);
-      const newEvent = classificationResult?.eventData;
   
-      const oldReminderId = itemToUpdate.reminder_id;
-      const oldReminder = oldReminderId ? reminders.find(r => r.id === oldReminderId) : null;
-  
-      let nextReminders = [...reminders];
-      let updatedItem: Item = { ...itemToUpdate, ...data };
-      
-      if (newEvent) {
-        const reminderTime = new Date(`${newEvent.date}T${newEvent.time || '09:00:00'}`);
-        if (isNaN(reminderTime.getTime())) {
-          console.error('Invalid date from AI');
-          setItems(prevItems => prevItems.map(item => item.id === itemId ? updatedItem : item));
-          return;
-        }
-  
-        if (oldReminder) {
-          const reminderIndex = nextReminders.findIndex(r => r.id === oldReminder.id);
-          if (reminderIndex !== -1) {
-            nextReminders[reminderIndex] = { ...oldReminder, title: newEvent.title, reminder_time: reminderTime };
+      if (classificationResult) {
+        const newEvent = classificationResult.eventData;
+        const oldReminderId = itemToUpdate.reminder_id;
+        const oldReminder = oldReminderId ? reminders.find(r => r.id === oldReminderId) : null;
+        let nextReminders = [...reminders];
+        let newReminderId: string | undefined = oldReminderId;
+        
+        // 3. Handle reminder creation/update/deletion logic.
+        if (newEvent) {
+          const reminderTime = new Date(`${newEvent.date}T${newEvent.time || '09:00:00'}`);
+          if (!isNaN(reminderTime.getTime())) {
+            if (oldReminder) {
+              // Update existing reminder
+              const reminderIndex = nextReminders.findIndex(r => r.id === oldReminder.id);
+              if (reminderIndex !== -1) {
+                nextReminders[reminderIndex] = { ...oldReminder, title: newEvent.title, reminder_time: reminderTime };
+              }
+            } else {
+              // Create a new reminder
+              const newReminder = { id: `reminder-${Date.now()}`, item_id: itemId, title: newEvent.title, reminder_time: reminderTime };
+              nextReminders = [newReminder, ...nextReminders];
+              newReminderId = newReminder.id;
+            }
           }
-        } else {
-          if (oldReminderId) {
-            nextReminders = nextReminders.filter(r => r.id !== oldReminderId);
-          }
-          const newReminder = { id: `reminder-${Date.now()}`, item_id: itemId, title: newEvent.title, reminder_time: reminderTime };
-          nextReminders = [newReminder, ...nextReminders];
-          updatedItem.reminder_id = newReminder.id;
-        }
-      } else {
-        if (oldReminder) {
+        } else if (oldReminder) {
+          // No new event data, so remove the old reminder
           nextReminders = nextReminders.filter(r => r.id !== oldReminder.id);
-          delete updatedItem.reminder_id;
-        } else if (oldReminderId) {
-          delete updatedItem.reminder_id;
+          newReminderId = undefined;
         }
+        
+        // 4. Update reminders state
+        setReminders(nextReminders);
+        
+        // 5. Create the final item object with layered AI data and update items state
+        const finalUpdatedItem: Item = { 
+          ...itemWithUserEdits,
+          summary: classificationResult.classification.summary,
+          content_type: classificationResult.classification.category,
+          tags: classificationResult.classification.tags,
+          reminder_id: newReminderId,
+          event_data: classificationResult.eventData || undefined,
+          job_data: classificationResult.jobData || undefined,
+          product_data: classificationResult.productData || undefined,
+          portfolio_data: classificationResult.portfolioData || undefined,
+          tutorial_data: classificationResult.tutorialData || undefined,
+          offer_data: classificationResult.offerData || undefined,
+          announcement_data: classificationResult.announcementData || undefined,
+          research_data: classificationResult.researchData || undefined,
+          update_data: classificationResult.updateData || undefined,
+          team_spotlight_data: classificationResult.teamSpotlightData || undefined,
+          quote_data: classificationResult.quoteData || undefined,
+          festival_data: classificationResult.festivalData || undefined,
+          recipe_data: classificationResult.recipeData || undefined,
+          post_data: classificationResult.postData || undefined,
+        };
+        
+        setItems(prevItems => prevItems.map(item => item.id === itemId ? finalUpdatedItem : item));
       }
-      
-      setReminders(nextReminders);
-      setItems(prevItems => prevItems.map(item => item.id === itemId ? updatedItem : item));
     } catch (error) {
-      console.error('Error updating item:', error);
-      setItems(prevItems => prevItems.map(item => 
-        item.id === itemId ? { ...item, ...data } : item
-      ));
+      console.error('Error re-classifying item during update. User text changes are saved.', error);
+      // The user's text edits are already saved, so we just log the error.
     }
   }, [items, reminders]);
 

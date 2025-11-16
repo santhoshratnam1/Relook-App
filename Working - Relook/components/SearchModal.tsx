@@ -24,29 +24,22 @@ const SearchModal: React.FC<SearchModalProps> = ({ items, onClose, onNavigate })
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(query);
-    }, 300);
+    }, 200);
     return () => clearTimeout(timer);
   }, [query]);
 
   const filteredItems = useMemo(() => {
-    if (!debouncedQuery.trim()) return [];
+    if (!debouncedQuery.trim()) {
+      // Show 3 most recent items when query is empty.
+      return items.slice(0, 3);
+    }
     const lowerCaseQuery = debouncedQuery.toLowerCase();
-    
-    // Check if query is a URL pattern
-    const isUrlQuery = debouncedQuery.includes('http') || debouncedQuery.includes('www.') || debouncedQuery.includes('.com') || debouncedQuery.includes('.org');
     
     return items.filter(item => {
       const titleMatch = item.title.toLowerCase().includes(lowerCaseQuery);
       const bodyMatch = item.body.toLowerCase().includes(lowerCaseQuery);
-      
-      // If searching for URL, also check source_type and body for links
-      if (isUrlQuery) {
-        const hasUrlInBody = item.body.match(/https?:\/\/[^\s]+/);
-        const isBookmark = item.source_type === SourceType.Bookmark;
-        return titleMatch || bodyMatch || hasUrlInBody || isBookmark;
-      }
-      
-      return titleMatch || bodyMatch;
+      const tagsMatch = item.tags?.some(tag => tag.toLowerCase().includes(lowerCaseQuery));
+      return titleMatch || bodyMatch || tagsMatch;
     });
   }, [debouncedQuery, items]);
 
@@ -56,9 +49,11 @@ const SearchModal: React.FC<SearchModalProps> = ({ items, onClose, onNavigate })
     onClose();
   };
 
+  const isShowingRecents = !debouncedQuery.trim();
+
   return (
     <div className="fixed inset-0 bg-[#0C0D0F]/95 backdrop-blur-sm z-50 flex flex-col animate-fade-in">
-      <div className="p-4 flex items-center space-x-4 border-b border-white/10">
+      <div className="p-4 flex items-center space-x-4 border-b border-white/10 safe-area-top">
         <input
           type="text"
           value={query}
@@ -72,7 +67,10 @@ const SearchModal: React.FC<SearchModalProps> = ({ items, onClose, onNavigate })
         </button>
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {debouncedQuery.trim() && filteredItems.length === 0 && (
+        {isShowingRecents && filteredItems.length > 0 && (
+          <h3 className="text-sm font-bold text-gray-500 px-3 pb-2">RECENT SAVES</h3>
+        )}
+        {!isShowingRecents && filteredItems.length === 0 && (
           <p className="text-center text-gray-400 mt-8">No results found for "{debouncedQuery}"</p>
         )}
         {filteredItems.map(item => {
@@ -103,7 +101,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ items, onClose, onNavigate })
                       </a>
                     )}
                     <span className="mt-2 inline-block text-xs capitalize px-2 py-1 rounded-full bg-gradient-to-r from-[#e6f0c630] to-[#f6f2d830] text-[#E6F0C6]">
-                      {item.content_type}
+                      {item.content_type.replace('_', ' ')}
                     </span>
                  </div>
               </div>
