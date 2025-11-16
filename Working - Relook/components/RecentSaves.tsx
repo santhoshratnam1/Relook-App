@@ -5,6 +5,7 @@ import { ScreenshotIcon } from './IconComponents';
 
 interface RecentSavesProps {
   items: Item[];
+  onNavigate: (path: string) => void;
 }
 
 const SourceIcon = ({ type }: { type: SourceType }) => {
@@ -17,12 +18,17 @@ const SourceIcon = ({ type }: { type: SourceType }) => {
     }
 }
 
-const RecentSaves: React.FC<RecentSavesProps> = ({ items }) => {
+const RecentSaves: React.FC<RecentSavesProps> = ({ items, onNavigate }) => {
   return (
     <div className="px-6 space-y-4">
         <h3 className="text-xl font-bold text-white">Recent Saves</h3>
         {items.map((item, index) => (
-            <div key={item.id} className={index === 0 ? "animate-fade-in" : ""}>
+            <div 
+              role="button"
+              onClick={() => onNavigate(`/item/${item.id}`)}
+              key={item.id} 
+              className={`block cursor-pointer ${index === 0 ? "animate-fade-in" : ""}`}
+            >
                 <DashboardCard>
                     <div className="flex items-start space-x-4">
                         {item.thumbnail_url ? (

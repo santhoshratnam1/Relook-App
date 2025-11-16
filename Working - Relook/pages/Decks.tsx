@@ -8,9 +8,10 @@ interface DecksPageProps {
   decks: Deck[];
   items: Item[];
   onCreateDeck: (deckData: { title: string; description: string; }) => void;
+  onNavigate: (path: string) => void;
 }
 
-const DecksPage: React.FC<DecksPageProps> = ({ decks, items, onCreateDeck }) => {
+const DecksPage: React.FC<DecksPageProps> = ({ decks, items, onCreateDeck, onNavigate }) => {
   const [isCreating, setIsCreating] = useState(false);
 
   const getItemCountForDeck = (deckId: string) => {
@@ -41,7 +42,7 @@ const DecksPage: React.FC<DecksPageProps> = ({ decks, items, onCreateDeck }) => 
 
         <div className="grid grid-cols-2 gap-4">
           {decks.map((deck) => (
-            <a href={`#/decks/${deck.id}`} key={deck.id} className="block">
+            <div role="button" onClick={() => onNavigate(`/decks/${deck.id}`)} key={deck.id} className="block cursor-pointer">
               <DashboardCard className="h-full flex flex-col justify-between">
                 <div>
                   <h3 className="font-bold text-white truncate">{deck.title}</h3>
@@ -49,7 +50,7 @@ const DecksPage: React.FC<DecksPageProps> = ({ decks, items, onCreateDeck }) => 
                 </div>
                 <p className="text-xs text-gray-500 mt-3">{getItemCountForDeck(deck.id)} items</p>
               </DashboardCard>
-            </a>
+            </div>
           ))}
         </div>
       </div>

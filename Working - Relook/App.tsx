@@ -6,10 +6,18 @@ import Inbox from './pages/Inbox';
 import RemindersPage from './pages/Reminders';
 import DecksPage from './pages/Decks';
 import DeckDetail from './pages/DeckDetail';
+import ItemDetail from './pages/ItemDetail';
 import KnowledgeTreePage from './pages/KnowledgeTreePage';
 import UndoNotification from './components/UndoNotification';
-import { User, Rewards, Item, Reminder, ContentType, ItemStatus, SourceType, ExtractedEvent, Deck, Mission, MissionType } from './types';
+import SearchModal from './components/SearchModal';
+import SideMenu from './components/SideMenu';
+import LoginPage from './pages/LoginPage';
+import ProfilePage from './pages/ProfilePage';
+import RewardModal from './components/RewardModal';
+import AchievementsPage from './pages/AchievementsPage';
+import { User, Rewards, Item, Reminder, ContentType, ItemStatus, SourceType, ExtractedEvent, Deck, Mission, MissionType, Achievement } from './types';
 import { DAILY_MISSIONS_BLUEPRINT } from './data/missions';
+import { ACHIEVEMENTS_BLUEPRINT } from './data/achievements';
 
 const initialUser: User = {
   id: 'user-123',
@@ -17,7 +25,7 @@ const initialUser: User = {
   avatar_url: 'https://picsum.photos/seed/relookuser/100/100',
 };
 
-const initialRewards: Rewards = { xp: 450, level: 3, streak: 5, last_activity: new Date() };
+const initialRewards: Rewards = { xp: 450, level: 3, streak: 5, last_activity: new Date(0) };
 const initialItems: Item[] = [];
 const initialReminders: Reminder[] = [];
 const initialDecks: Deck[] = [];
@@ -40,9 +48,11 @@ const isSameDay = (d1: Date, d2: Date) =>
   d1.getDate() === d2.getDate();
 
 const App: React.FC = () => {
-  const [currentPath, setCurrentPath] = useState(window.location.hash || '#/');
-  const [user] = useState<User>(initialUser);
-
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => JSON.parse(localStorage.getItem('relook-auth') || 'false'));
+  const [currentPath, setCurrentPath] = useState('/');
+  const [navHistory, setNavHistory] = useState(['/']);
+  
+  const [user, setUser] = useState<User>(() => JSON.parse(localStorage.getItem('relook-user') || JSON.stringify(initialUser)));
   const [rewards, setRewards] = useState<Rewards>(() => JSON.parse(localStorage.getItem('relook-rewards') || JSON.stringify(initialRewards), (key, value) => key === 'last_activity' ? new Date(value) : value));
   const [items, setItems] = useState<Item[]>(() => JSON.parse(localStorage.getItem('relook-items') || JSON.stringify(initialItems), (key, value) => (key === 'created_at' || key === 'reminder_time') ? new Date(value) : value));
   const [reminders, setReminders] = useState<Reminder[]>(() => JSON.parse(localStorage.getItem('relook-reminders') || JSON.stringify(initialReminders), (key, value) => key === 'reminder_time' ? new Date(value) : value));
@@ -56,14 +66,15 @@ const App: React.FC = () => {
     }
     return [];
   });
+  const [achievements, setAchievements] = useState<Achievement[]>(() => JSON.parse(localStorage.getItem('relook-achievements') || '[]'));
+  const [showRewardModal, setShowRewardModal] = useState(false);
+  const [earnedReward, setEarnedReward] = useState<Achievement | null>(null);
 
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  useEffect(() => {
-    const handleHashChange = () => setCurrentPath(window.location.hash || '#/');
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
-
+  useEffect(() => { localStorage.setItem('relook-auth', JSON.stringify(isAuthenticated)); }, [isAuthenticated]);
+  useEffect(() => { localStorage.setItem('relook-user', JSON.stringify(user)); }, [user]);
   useEffect(() => { localStorage.setItem('relook-rewards', JSON.stringify(rewards)); }, [rewards]);
   useEffect(() => { localStorage.setItem('relook-items', JSON.stringify(items)); }, [items]);
   useEffect(() => { localStorage.setItem('relook-reminders', JSON.stringify(reminders));}, [reminders]);
@@ -72,8 +83,12 @@ const App: React.FC = () => {
     localStorage.setItem('relook-missions', JSON.stringify(missions)); 
     localStorage.setItem('relook-missions-date', new Date().toISOString());
   }, [missions]);
+  useEffect(() => { localStorage.setItem('relook-achievements', JSON.stringify(achievements)); }, [achievements]);
+
 
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     const lastActivity = rewards.last_activity;
     const now = new Date();
 
@@ -90,10 +105,45 @@ const App: React.FC = () => {
         const newMissions = DAILY_MISSIONS_BLUEPRINT.map(m => ({ ...m, progress: 0 }));
         setMissions(newMissions);
     }
-  }, []);
 
+    if (achievements.length === 0) {
+      setAchievements(ACHIEVEMENTS_BLUEPRINT.map(a => ({ ...a, progress: 0, unlocked: false })));
+    }
+    checkAchievements(items.length, decks.length, rewards.streak);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
-  const updateRewards = (xpToAdd: number, fromStreak = false) => {
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+    setCurrentPath('/');
+    setNavHistory(['/']);
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+  };
+
+  const handleUpdateUser = (updatedUser: { display_name: string; avatar_url: string; }) => {
+    setUser(prev => ({ ...prev, ...updatedUser }));
+  };
+
+  const handleNavigate = (path: string) => {
+    if (path === currentPath) return;
+    setNavHistory(prev => [...prev, path]);
+    setCurrentPath(path);
+  };
+
+  const handleBack = () => {
+    if (navHistory.length > 1) {
+      const newHistory = [...navHistory];
+      newHistory.pop();
+      const prevPath = newHistory[newHistory.length - 1];
+      setNavHistory(newHistory);
+      setCurrentPath(prevPath);
+    }
+  };
+
+  const updateRewards = (xpToAdd: number) => {
     setRewards(prev => {
       let newXp = prev.xp + xpToAdd;
       let newLevel = prev.level;
@@ -104,11 +154,45 @@ const App: React.FC = () => {
         xpForNextLevel = XP_BASE_PER_LEVEL * newLevel;
       }
       
-      const newStreak = (fromStreak || isSameDay(prev.last_activity, new Date())) ? prev.streak : (prev.streak + 1);
+      const now = new Date();
+      const lastActivity = new Date(prev.last_activity);
+      let newStreak = prev.streak;
+      if (!isSameDay(lastActivity, now)) {
+        const yesterday = new Date();
+        yesterday.setDate(now.getDate() - 1);
+        newStreak = isSameDay(lastActivity, yesterday) ? prev.streak + 1 : 1;
+      }
 
       return { ...prev, xp: newXp, level: newLevel, streak: newStreak, last_activity: new Date() };
     });
   }
+
+  const checkAchievements = (itemCount: number, deckCount: number, streak: number) => {
+    setAchievements(prev => prev.map(achievement => {
+      if (achievement.unlocked) return achievement;
+      
+      let newProgress = achievement.progress;
+      if (achievement.id === 'first_steps') newProgress = itemCount;
+      if (achievement.id === 'organizer') newProgress = deckCount;
+      if (achievement.id === 'streak_7') newProgress = streak;
+      if (achievement.id === 'streak_30') newProgress = streak;
+      
+      const justUnlocked = !achievement.unlocked && newProgress >= achievement.goal;
+      if (justUnlocked) {
+        setEarnedReward(achievement);
+        setShowRewardModal(true);
+        if (achievement.reward.includes('XP')) {
+          const xpAmount = parseInt(achievement.reward.split('+')[1].trim().split(' ')[0]);
+          if (!isNaN(xpAmount)) {
+            updateRewards(xpAmount);
+          }
+        }
+        return { ...achievement, progress: achievement.goal, unlocked: true };
+      }
+      
+      return { ...achievement, progress: newProgress };
+    }));
+  };
 
   const updateMissionProgress = (missionId: MissionType, amount = 1) => {
     setMissions(prevMissions => {
@@ -127,7 +211,7 @@ const App: React.FC = () => {
         if (missionJustCompleted) {
             const mission = DAILY_MISSIONS_BLUEPRINT.find(m => m.id === missionId);
             if (mission) {
-                updateRewards(mission.xp, true);
+                updateRewards(mission.xp);
             }
         }
         return newMissions;
@@ -156,9 +240,11 @@ const App: React.FC = () => {
           setReminders(prev => [newReminder!, ...prev]);
       }
     }
-    setItems(prev => [newItem, ...prev]);
+    const newItems = [newItem, ...items];
+    setItems(newItems);
     updateRewards(XP_PER_ITEM);
     updateMissionProgress(MissionType.CLASSIFY_FIRST_ITEM);
+    checkAchievements(newItems.length, decks.length, rewards.streak);
 
     const timeoutId = window.setTimeout(() => setUndoState(null), 5000);
     setUndoState({ item: newItem, reminder: newReminder, previousRewards, timeoutId });
@@ -181,8 +267,10 @@ const App: React.FC = () => {
       description: deckData.description,
       created_at: new Date(),
     };
-    setDecks(prev => [newDeck, ...prev]);
-    updateRewards(XP_PER_DECK_CREATE, true);
+    const newDecks = [newDeck, ...decks];
+    setDecks(newDecks);
+    updateRewards(XP_PER_DECK_CREATE);
+    checkAchievements(items.length, newDecks.length, rewards.streak);
   };
 
   const handleAddItemToDeck = (itemId: string, deckId: string) => {
@@ -195,62 +283,141 @@ const App: React.FC = () => {
         : i
     ));
 
-    updateRewards(XP_PER_ADD_TO_DECK, true);
-    // FIX: Corrected typo from `ORGANIZ` to `ORGANIZE_ITEM`
+    updateRewards(XP_PER_ADD_TO_DECK);
     updateMissionProgress(MissionType.ORGANIZE_ITEM);
   };
+
+  const handleAutoAddItemToDeck = (item: Item) => {
+    const suggestedDeckName = `${item.content_type.charAt(0).toUpperCase() + item.content_type.slice(1)} Collection`;
+    const existingDeck = decks.find(d => d.title.toLowerCase().includes(item.content_type.toLowerCase()));
+    
+    if (existingDeck) {
+      handleAddItemToDeck(item.id, existingDeck.id);
+    } else {
+      const newDeck: Deck = {
+        id: `deck-${Date.now()}`,
+        user_id: user.id,
+        title: suggestedDeckName,
+        description: `Auto-created for ${item.content_type} items`,
+        created_at: new Date(),
+      };
+      const newDecks = [newDeck, ...decks];
+      setDecks(newDecks);
+      setItems(prev => prev.map(i => 
+        i.id === item.id 
+          ? { ...i, deck_ids: [newDeck.id] }
+          : i
+      ));
+      updateRewards(XP_PER_ADD_TO_DECK);
+      updateMissionProgress(MissionType.ORGANIZE_ITEM);
+      checkAchievements(items.length, newDecks.length, rewards.streak);
+    }
+  };
+
 
   const handleCompleteReminder = (reminderId: string) => {
     const reminder = reminders.find(r => r.id === reminderId);
     if (!reminder) return;
     
     setReminders(prev => prev.filter(r => r.id !== reminderId));
-    // Also remove reminder_id from item if it exists
     setItems(prev => prev.map(i => i.reminder_id === reminderId ? { ...i, reminder_id: undefined } : i));
 
     const mission = DAILY_MISSIONS_BLUEPRINT.find(m => m.id === MissionType.COMPLETE_REMINDER);
     if(mission){
-      updateRewards(mission.xp, true);
+      updateRewards(mission.xp);
       updateMissionProgress(MissionType.COMPLETE_REMINDER);
     }
   };
 
-  // FIX: Added render function and main return statement for the component.
+  const handleUpdateItem = (itemId: string, data: { title: string, body: string }) => {
+    setItems(prevItems => prevItems.map(item => 
+      item.id === itemId ? { ...item, ...data } : item
+    ));
+  };
+
+  const handleDeleteItem = (itemId: string) => {
+    const itemToDelete = items.find(i => i.id === itemId);
+    if (!itemToDelete) return;
+
+    setItems(prevItems => prevItems.filter(i => i.id !== itemId));
+    if (itemToDelete.reminder_id) {
+      setReminders(prevReminders => prevReminders.filter(r => r.id !== itemToDelete.reminder_id));
+    }
+  };
+
+  if (!isAuthenticated) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
   const renderPage = () => {
-    const cleanPath = currentPath.slice(1) || '/';
-    
-    if (cleanPath.startsWith('decks/')) {
-        const deckId = cleanPath.split('/')[2];
-        return <DeckDetail deckId={deckId} decks={decks} items={items} />;
+    if (currentPath.startsWith('/decks/')) {
+        const deckId = currentPath.split('/')[2];
+        return <DeckDetail deckId={deckId} decks={decks} items={items} onNavigate={handleNavigate} onBack={handleBack} />;
     }
 
-    switch (cleanPath) {
+    if (currentPath.startsWith('/item/')) {
+        const itemId = currentPath.split('/')[2];
+        return <ItemDetail 
+            itemId={itemId} 
+            items={items} 
+            decks={decks} 
+            onAddItemToDeck={handleAddItemToDeck} 
+            onCreateDeck={handleCreateDeck}
+            onUpdateItem={handleUpdateItem}
+            onDeleteItem={handleDeleteItem}
+            onNavigate={handleNavigate}
+            onBack={handleBack}
+        />;
+    }
+
+    switch (currentPath) {
       case '/':
-        return <Dashboard user={user} rewards={rewards} recentItems={items.slice(0, 3)} onItemAdded={handleAddItem} missions={missions} />;
+        return <Dashboard user={user} rewards={rewards} recentItems={items.slice(0, 3)} onItemAdded={handleAddItem} missions={missions} onNavigate={handleNavigate} />;
       case '/inbox':
-        return <Inbox items={items.filter(i => i.status === ItemStatus.New)} decks={decks} onAddItemToDeck={handleAddItemToDeck} onCreateDeck={handleCreateDeck} />;
+        return <Inbox items={items.filter(i => i.status === ItemStatus.New)} decks={decks} onAutoAddItemToDeck={handleAutoAddItemToDeck} onDeleteItem={handleDeleteItem} onNavigate={handleNavigate} />;
       case '/tree':
         return <KnowledgeTreePage user={user} rewards={rewards} itemCount={items.length} deckCount={decks.length} />;
       case '/decks':
-        return <DecksPage decks={decks} items={items} onCreateDeck={handleCreateDeck} />;
+        return <DecksPage decks={decks} items={items} onCreateDeck={handleCreateDeck} onNavigate={handleNavigate} />;
       case '/reminders':
         return <RemindersPage reminders={reminders} items={items} onCompleteReminder={handleCompleteReminder} />;
+      case '/profile':
+        return <ProfilePage user={user} onUpdateUser={handleUpdateUser} onBack={handleBack} />;
+      case '/achievements':
+        return <AchievementsPage achievements={achievements} onBack={handleBack} />;
       default:
-        return <Dashboard user={user} rewards={rewards} recentItems={items.slice(0, 3)} onItemAdded={handleAddItem} missions={missions} />;
+        return <Dashboard user={user} rewards={rewards} recentItems={items.slice(0, 3)} onItemAdded={handleAddItem} missions={missions} onNavigate={handleNavigate} />;
     }
   };
 
   return (
     <div className="bg-[#0C0D0F] text-white min-h-screen font-sans pb-24 max-w-md mx-auto">
-      <Header />
+      <Header onMenuClick={() => setIsMenuOpen(true)} onSearchClick={() => setIsSearchOpen(true)} />
+      <SideMenu 
+        isOpen={isMenuOpen} 
+        onClose={() => setIsMenuOpen(false)}
+        user={user}
+        rewards={rewards}
+        onNavigate={handleNavigate}
+        onLogout={handleLogout}
+      />
       <main>
         {renderPage()}
       </main>
       {undoState && <UndoNotification onUndo={handleUndo} />}
-      <Navigation currentPath={currentPath} />
+      {isSearchOpen && <SearchModal items={items} onClose={() => setIsSearchOpen(false)} onNavigate={handleNavigate} />}
+      {showRewardModal && earnedReward && (
+        <RewardModal 
+          earnedReward={earnedReward}
+          onClose={() => {
+            setShowRewardModal(false);
+            setEarnedReward(null);
+          }}
+        />
+      )}
+      <Navigation currentPath={currentPath} onNavigate={handleNavigate} />
     </div>
   );
 };
 
-// FIX: Added default export for the App component.
 export default App;

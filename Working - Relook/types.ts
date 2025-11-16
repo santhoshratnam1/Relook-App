@@ -84,3 +84,13 @@ export interface Mission {
   goal: number;
   progress: number;
 }
+
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  progress: number;
+  goal: number;
+  unlocked: boolean;
+  reward: string;
+}

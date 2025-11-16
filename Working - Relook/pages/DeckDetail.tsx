@@ -7,6 +7,8 @@ interface DeckDetailProps {
   deckId: string;
   decks: Deck[];
   items: Item[];
+  onNavigate: (path: string) => void;
+  onBack: () => void;
 }
 
 const SourceIcon = ({ type }: { type: SourceType }) => {
@@ -18,7 +20,7 @@ const SourceIcon = ({ type }: { type: SourceType }) => {
     }
 }
 
-const DeckDetail: React.FC<DeckDetailProps> = ({ deckId, decks, items }) => {
+const DeckDetail: React.FC<DeckDetailProps> = ({ deckId, decks, items, onNavigate, onBack }) => {
   const deck = decks.find(d => d.id === deckId);
   const deckItems = items
     .filter(item => item.deck_ids?.includes(deckId))
@@ -28,7 +30,7 @@ const DeckDetail: React.FC<DeckDetailProps> = ({ deckId, decks, items }) => {
     return (
       <div className="px-6 text-center py-10">
         <h2 className="text-2xl font-bold text-white mt-4">Deck not found</h2>
-        <a href="#/decks" className="text-sm text-[#E6F0C6] hover:underline mt-2">Go back to all decks</a>
+        <button onClick={() => onNavigate('/decks')} className="text-sm text-[#E6F0C6] hover:underline mt-2">Go back to all decks</button>
       </div>
     );
   }
@@ -36,7 +38,7 @@ const DeckDetail: React.FC<DeckDetailProps> = ({ deckId, decks, items }) => {
   return (
     <div className="px-6 space-y-4">
       <div className="mt-4">
-        <a href="#/decks" className="text-sm text-gray-400 hover:text-white transition-colors">&larr; All Decks</a>
+        <button onClick={onBack} className="text-sm text-gray-400 hover:text-white transition-colors">&larr; Back</button>
         <h2 className="text-3xl font-bold text-white mt-2">{deck.title}</h2>
         <p className="text-gray-300 mt-1">{deck.description}</p>
       </div>
@@ -46,7 +48,8 @@ const DeckDetail: React.FC<DeckDetailProps> = ({ deckId, decks, items }) => {
             <p className="text-gray-400 text-center py-8">This deck is empty. Add items from your Inbox.</p>
         )}
         {deckItems.map((item) => (
-            <DashboardCard key={item.id} className="hover:scale-[1.01]">
+          <div role="button" onClick={() => onNavigate(`/item/${item.id}`)} key={item.id} className="block cursor-pointer">
+            <DashboardCard className="hover:scale-[1.01]">
                 <div className="flex items-start space-x-4">
                     {item.thumbnail_url ? (
                         <img src={item.thumbnail_url} alt={item.title} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
@@ -66,6 +69,7 @@ const DeckDetail: React.FC<DeckDetailProps> = ({ deckId, decks, items }) => {
                     </div>
                 </div>
             </DashboardCard>
+          </div>
         ))}
       </div>
     </div>
