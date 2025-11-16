@@ -10,9 +10,12 @@ const AnnouncementView: React.FC<AnnouncementViewProps> = ({ announcement }) => 
   return (
     <dl>
         <InfoRow label="Announcement" value={announcement.title} icon="📢" />
+        {announcement.description && <p className="text-sm text-gray-400 py-3 px-1">{announcement.description}</p>}
         <InfoRow label="Type" value={announcement.type} icon="🏷️" />
+        <InfoRow label="Priority" value={announcement.priority} icon="⚠️" />
         <InfoRow label="Effective From" value={announcement.effectiveFrom} icon="📅" />
         <InfoRow label="Impact" value={announcement.impact} icon="💥" />
+        <InfoRow label="Action Required" value={announcement.actionRequired} icon="📝" />
         <InfoRow 
             label="Team Involved" 
             value={announcement.teamInvolved && announcement.teamInvolved.join(', ')} 

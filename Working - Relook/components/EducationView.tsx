@@ -10,10 +10,22 @@ const EducationView: React.FC<EducationViewProps> = ({ education }) => {
     return (
         <dl>
             <InfoRow label="Title" value={education.title} icon="🧠" />
+            {education.description && <p className="text-sm text-gray-400 py-3 px-1">{education.description}</p>}
             <InfoRow label="Category" value={education.category} icon="📚" />
+            <InfoRow label="Instructor" value={education.instructor} icon="🧑‍🏫" />
             <InfoRow label="Difficulty" value={education.difficulty} icon="📊" />
             <InfoRow label="Duration" value={education.duration} icon="⏰" />
-            <InfoRow label="Steps" value={education.stepsCount?.toString()} icon="🔢" />
+            <InfoRow 
+                label="Outcomes" 
+                value={
+                    education.learningOutcomes && education.learningOutcomes.length > 0 ? (
+                        <ul className="list-disc list-inside space-y-1">
+                            {education.learningOutcomes.map((item, index) => <li key={index}>{item}</li>)}
+                        </ul>
+                    ) : undefined
+                }
+                icon="🎯"
+            />
             <InfoRow 
                 label="Tools" 
                 value={

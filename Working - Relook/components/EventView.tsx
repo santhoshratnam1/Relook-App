@@ -23,13 +23,32 @@ const EventView: React.FC<EventViewProps> = ({ event }) => {
         <dl>
             <InfoRow label="Type" value={event.type} icon="🗓️" />
             <InfoRow label="Date" value={formatDate(event.date)} icon="📅" />
-            <InfoRow label="Time" value={event.time} icon="⏰" />
+            <InfoRow label="Time" value={event.time ? `${event.time}${event.endTime ? ` - ${event.endTime}` : ''}` : undefined} icon="⏰" />
+            <InfoRow label="Duration" value={event.duration} icon="⏳" />
             <InfoRow label="Location" value={event.location} icon="📍" />
             <InfoRow label="Host" value={event.host} icon="🏢" />
+            <InfoRow label="Organizer" value={event.organizer} icon="🧑‍💼" />
+            <InfoRow label="Audience" value={event.targetAudience} icon="👥" />
+            <InfoRow label="Cost" value={event.cost} icon="💰" />
             <InfoRow 
                 label="Speakers" 
                 value={event.speakers && event.speakers.join(', ')} 
                 icon="🎤" 
+            />
+            <InfoRow 
+                label="Topics"
+                value={
+                    event.topics && event.topics.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                            {event.topics.map((topic, index) => (
+                                <span key={index} className="text-xs px-2 py-1 rounded-full bg-slate-600/70 text-slate-300">
+                                    {topic}
+                                </span>
+                            ))}
+                        </div>
+                    ) : undefined
+                }
+                icon="🧠"
             />
             <InfoRow 
                 label="Agenda" 

@@ -29,6 +29,17 @@ const UpdateView: React.FC<UpdateViewProps> = ({ update }) => {
             icon="✨"
         />
         <InfoRow 
+            label="Improvements" 
+            value={
+                update.improvements && update.improvements.length > 0 ? (
+                    <ul className="list-disc list-inside space-y-1">
+                        {update.improvements.map((item, index) => <li key={index}>{item}</li>)}
+                    </ul>
+                ) : undefined
+            }
+            icon="📈"
+        />
+        <InfoRow 
             label="Bug Fixes" 
             value={
                 update.bugFixes && update.bugFixes.length > 0 ? (
@@ -38,6 +49,17 @@ const UpdateView: React.FC<UpdateViewProps> = ({ update }) => {
                 ) : undefined
             }
             icon="🐞"
+        />
+         <InfoRow 
+            label="Security" 
+            value={
+                update.security && update.security.length > 0 ? (
+                    <ul className="list-disc list-inside space-y-1">
+                        {update.security.map((item, index) => <li key={index}>{item}</li>)}
+                    </ul>
+                ) : undefined
+            }
+            icon="🛡️"
         />
          <InfoRow 
             label="Download" 

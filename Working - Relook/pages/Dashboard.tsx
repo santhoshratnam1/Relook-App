@@ -5,10 +5,10 @@ import Classifier from '../components/Classifier';
 import ImageClassifier from '../components/ImageClassifier';
 import DailyMissions from '../components/DailyMissions';
 import { 
-    User, Rewards, Item, ContentType, SourceType, EventData, Mission, Achievement, RecipeData, 
-    JobData, PostData, PortfolioData, TutorialData, ProductData, OfferData, AnnouncementData, 
-    ResearchData, UpdateData, TeamSpotlightData, QuoteData, FestivalData
+    User, Rewards, Item, Mission, Achievement
 } from '../types';
+
+type AddItemPayload = Omit<Item, 'id' | 'user_id' | 'created_at' | 'status' | 'thumbnail_url' | 'reminder_id' | 'deck_ids' | 'design_data' | 'education_data'>;
 
 interface DashboardProps {
   user: User;
@@ -17,28 +17,7 @@ interface DashboardProps {
   missions: Mission[];
   achievements: Achievement[];
   equippedItems: { [key: string]: string };
-  onItemAdded: (data: { 
-    title: string; 
-    summary: string;
-    body: string; 
-    content_type: ContentType; 
-    source_type: SourceType; 
-    tags?: string[];
-    eventData: EventData | null;
-    recipeData?: RecipeData | null;
-    jobData?: JobData | null;
-    postData?: PostData | null;
-    portfolioData?: PortfolioData | null;
-    tutorialData?: TutorialData | null;
-    productData?: ProductData | null;
-    offerData?: OfferData | null;
-    announcementData?: AnnouncementData | null;
-    researchData?: ResearchData | null;
-    updateData?: UpdateData | null;
-    teamSpotlightData?: TeamSpotlightData | null;
-    quoteData?: QuoteData | null;
-    festivalData?: FestivalData | null;
-  }) => void;
+  onItemAdded: (data: AddItemPayload) => void;
   onNavigate: (path: string) => void;
 }
 

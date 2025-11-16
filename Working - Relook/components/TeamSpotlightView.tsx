@@ -11,8 +11,10 @@ const TeamSpotlightView: React.FC<TeamSpotlightViewProps> = ({ spotlight }) => {
     <dl>
         <InfoRow label="Name" value={spotlight.name} icon="👤" />
         <InfoRow label="Role" value={spotlight.role} icon="🧑‍💻" />
+        <InfoRow label="Department" value={spotlight.department} icon="🏢" />
         <InfoRow label="Experience" value={spotlight.experience} icon="📈" />
         <InfoRow label="Location" value={spotlight.location} icon="📍" />
+        {spotlight.bio && <p className="text-sm text-gray-400 py-3 px-1">{spotlight.bio}</p>}
         <InfoRow 
             label="Skills" 
             value={
@@ -28,8 +30,31 @@ const TeamSpotlightView: React.FC<TeamSpotlightViewProps> = ({ spotlight }) => {
             } 
             icon="🛠️"
         />
+        <InfoRow 
+            label="Achievements" 
+            value={
+                spotlight.achievements && spotlight.achievements.length > 0 ? (
+                    <ul className="list-disc list-inside space-y-1">
+                        {spotlight.achievements.map((item, index) => <li key={index}>{item}</li>)}
+                    </ul>
+                ) : undefined
+            }
+            icon="🏆"
+        />
         <InfoRow label="Fun Fact" value={spotlight.funFact} icon="💡" />
         <InfoRow label="Quote" value={spotlight.quote ? `"${spotlight.quote}"` : undefined} icon="💬" />
+        <InfoRow 
+            label="Links"
+            value={
+                (spotlight.linkedIn || spotlight.portfolio) ? (
+                    <div className="space-x-4">
+                        {spotlight.linkedIn && <a href={spotlight.linkedIn} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">LinkedIn</a>}
+                        {spotlight.portfolio && <a href={spotlight.portfolio} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Portfolio</a>}
+                    </div>
+                ) : undefined
+            }
+            icon="🔗"
+        />
     </dl>
   );
 };

@@ -10,8 +10,21 @@ const FestivalView: React.FC<FestivalViewProps> = ({ festival }) => {
   return (
     <dl>
         <InfoRow label="Festival" value={festival.name} icon="🎉" />
+        {festival.specialMessage && <p className="text-lg text-center font-semibold text-yellow-200 py-4 italic">"{festival.specialMessage}"</p>}
         <InfoRow label="Date" value={festival.date} icon="📅" />
         <InfoRow label="Theme" value={festival.theme} icon="🎨" />
+        <InfoRow label="Significance" value={festival.culturalSignificance} icon="📜" />
+        <InfoRow 
+            label="Traditions"
+             value={
+                festival.traditions && festival.traditions.length > 0 ? (
+                    <ul className="list-disc list-inside space-y-1">
+                        {festival.traditions.map((item, index) => <li key={index}>{item}</li>)}
+                    </ul>
+                ) : undefined
+            }
+            icon="🕯️"
+        />
         <InfoRow 
             label="Colors" 
             value={
@@ -28,7 +41,6 @@ const FestivalView: React.FC<FestivalViewProps> = ({ festival }) => {
             } 
             icon="🌈"
         />
-        <InfoRow label="Message" value={festival.specialMessage} icon="💬" />
     </dl>
   );
 };

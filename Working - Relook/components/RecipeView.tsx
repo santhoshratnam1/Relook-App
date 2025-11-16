@@ -40,20 +40,16 @@ const RecipeView: React.FC<RecipeViewProps> = ({ recipe }) => {
 
   return (
     <div className="space-y-6">
+      {recipe.recipeName && <h2 className="text-2xl font-bold text-white text-center">{recipe.recipeName}</h2>}
+      {recipe.description && <p className="text-center text-gray-300 -mt-4">{recipe.description}</p>}
+      
       {/* Recipe Info Cards */}
-      <div className="grid grid-cols-2 gap-3">
-        {recipe.prepTime && (
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {recipe.totalTime && (
           <div className="bg-[#1a1b1e] p-3 rounded-xl border border-white/10 text-center">
             <div className="text-2xl mb-1">⏱️</div>
-            <div className="text-xs text-gray-400">Prep Time</div>
-            <div className="text-sm font-bold text-white">{recipe.prepTime}</div>
-          </div>
-        )}
-        {recipe.cookTime && (
-          <div className="bg-[#1a1b1e] p-3 rounded-xl border border-white/10 text-center">
-            <div className="text-2xl mb-1">🔥</div>
-            <div className="text-xs text-gray-400">Cook Time</div>
-            <div className="text-sm font-bold text-white">{recipe.cookTime}</div>
+            <div className="text-xs text-gray-400">Total Time</div>
+            <div className="text-sm font-bold text-white">{recipe.totalTime}</div>
           </div>
         )}
         {recipe.servings && (
@@ -61,6 +57,13 @@ const RecipeView: React.FC<RecipeViewProps> = ({ recipe }) => {
             <div className="text-2xl mb-1">🍽️</div>
             <div className="text-xs text-gray-400">Servings</div>
             <div className="text-sm font-bold text-white">{recipe.servings}</div>
+          </div>
+        )}
+        {recipe.cuisine && (
+          <div className="bg-[#1a1b1e] p-3 rounded-xl border border-white/10 text-center">
+            <div className="text-2xl mb-1">🌍</div>
+            <div className="text-xs text-gray-400">Cuisine</div>
+            <div className="text-sm font-bold text-white capitalize">{recipe.cuisine}</div>
           </div>
         )}
         {recipe.difficulty && (
@@ -141,6 +144,29 @@ const RecipeView: React.FC<RecipeViewProps> = ({ recipe }) => {
           ))}
         </div>
       </div>
+      
+      {/* Optional Sections */}
+      {((recipe.tips && recipe.tips.length > 0) || (recipe.variations && recipe.variations.length > 0)) && (
+          <div className="bg-[#1a1b1e] p-4 rounded-2xl border border-white/10 space-y-4">
+              {recipe.tips && recipe.tips.length > 0 && (
+                  <div>
+                      <h3 className="text-lg font-bold text-white mb-2">💡 Tips</h3>
+                      <ul className="list-disc list-inside space-y-1 text-gray-300 text-sm">
+                          {recipe.tips.map((tip, i) => <li key={i}>{tip}</li>)}
+                      </ul>
+                  </div>
+              )}
+              {recipe.variations && recipe.variations.length > 0 && (
+                  <div>
+                      <h3 className="text-lg font-bold text-white mb-2">🎨 Variations</h3>
+                      <ul className="list-disc list-inside space-y-1 text-gray-300 text-sm">
+                          {recipe.variations.map((variation, i) => <li key={i}>{variation}</li>)}
+                      </ul>
+                  </div>
+              )}
+          </div>
+      )}
+
 
       {/* Progress Bar */}
       {(recipe.ingredients.length > 0 || recipe.steps.length > 0) && (

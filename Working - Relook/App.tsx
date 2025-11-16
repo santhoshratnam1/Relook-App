@@ -19,9 +19,7 @@ import StorePage from './pages/StorePage';
 import MyStuffPage from './pages/MyStuffPage';
 import { 
     User, Rewards, Item, Reminder, ContentType, ItemStatus, SourceType, EventData, Deck, 
-    Mission, MissionType, Achievement, RecipeData, JobData, PostData, PortfolioData, 
-    TutorialData, ProductData, OfferData, AnnouncementData, ResearchData, UpdateData, 
-    TeamSpotlightData, QuoteData, FestivalData
+    Mission, MissionType, Achievement
 } from './types';
 import { StoreItem } from './data/store';
 import { DAILY_MISSIONS_BLUEPRINT } from './data/missions';
@@ -57,23 +55,7 @@ const isSameDay = (d1: Date, d2: Date) =>
   d1.getMonth() === d2.getMonth() &&
   d1.getDate() === d2.getDate();
 
-type AddItemData = {
-    title: string; summary: string; body: string; content_type: ContentType; source_type: SourceType; tags?: string[];
-    eventData: EventData | null;
-    recipeData?: RecipeData | null;
-    jobData?: JobData | null;
-    postData?: PostData | null;
-    portfolioData?: PortfolioData | null;
-    tutorialData?: TutorialData | null;
-    productData?: ProductData | null;
-    offerData?: OfferData | null;
-    announcementData?: AnnouncementData | null;
-    researchData?: ResearchData | null;
-    updateData?: UpdateData | null;
-    teamSpotlightData?: TeamSpotlightData | null;
-    quoteData?: QuoteData | null;
-    festivalData?: FestivalData | null;
-};
+type AddItemData = Omit<Item, 'id' | 'user_id' | 'created_at' | 'status' | 'thumbnail_url' | 'reminder_id' | 'deck_ids' | 'design_data' | 'education_data'>;
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => JSON.parse(localStorage.getItem('relook-auth') || 'false'));
@@ -268,28 +250,16 @@ const App: React.FC = () => {
     let newReminder: Reminder | undefined = undefined;
   
     let newItem: Item = {
-      id: newItemId, user_id: user.id, created_at: new Date(), status: ItemStatus.New,
+      ...data,
+      id: newItemId, 
+      user_id: user.id, 
+      created_at: new Date(), 
+      status: ItemStatus.New,
       thumbnail_url: data.source_type === SourceType.Screenshot ? `https://picsum.photos/seed/${Date.now()}/200/200` : undefined,
-      title: data.title, summary: data.summary, body: data.body, content_type: data.content_type, source_type: data.source_type,
-      tags: data.tags || undefined,
-      event_data: data.eventData || undefined,
-      job_data: data.jobData || undefined,
-      product_data: data.productData || undefined,
-      portfolio_data: data.portfolioData || undefined,
-      tutorial_data: data.tutorialData || undefined,
-      offer_data: data.offerData || undefined,
-      announcement_data: data.announcementData || undefined,
-      research_data: data.researchData || undefined,
-      update_data: data.updateData || undefined,
-      team_spotlight_data: data.teamSpotlightData || undefined,
-      quote_data: data.quoteData || undefined,
-      festival_data: data.festivalData || undefined,
-      recipe_data: data.recipeData || undefined,
-      post_data: data.postData || undefined,
     };
   
-    if (data.eventData) {
-      const { title, date, time } = data.eventData;
+    if (data.event_data) {
+      const { title, date, time } = data.event_data;
       const reminderTime = new Date(`${date}T${time || '09:00:00'}`);
       if (!isNaN(reminderTime.getTime())) {
         newReminder = { id: `reminder-${Date.now()}`, item_id: newItemId, title: title, reminder_time: reminderTime };
@@ -500,6 +470,13 @@ const App: React.FC = () => {
           festival_data: classificationResult.festivalData || undefined,
           recipe_data: classificationResult.recipeData || undefined,
           post_data: classificationResult.postData || undefined,
+          headings: classificationResult.headings,
+          sections: classificationResult.sections,
+          keyPhrases: classificationResult.keyPhrases,
+          urls: classificationResult.urls,
+          entities: classificationResult.entities,
+          sentiment: classificationResult.sentiment,
+          language: classificationResult.language,
         };
         
         setItems(prevItems => prevItems.map(item => item.id === itemId ? finalUpdatedItem : item));

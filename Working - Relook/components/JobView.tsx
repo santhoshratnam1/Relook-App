@@ -12,10 +12,13 @@ const JobView: React.FC<JobViewProps> = ({ job }) => {
         <dl>
             <InfoRow label="Role" value={job.role} icon="🧑‍💻" />
             <InfoRow label="Company" value={job.company} icon="🏢" />
+            {job.companyDescription && <p className="text-sm text-gray-400 py-3 px-1">{job.companyDescription}</p>}
             <InfoRow label="Location" value={job.location} icon="📍" />
             <InfoRow label="Type" value={job.jobType} icon="📄" />
+            <InfoRow label="Work Mode" value={job.workMode} icon="🏠" />
             <InfoRow label="Salary" value={job.salary} icon="💰" />
             <InfoRow label="Experience" value={job.experience} icon="📈" />
+            <InfoRow label="Education" value={job.education} icon="🎓" />
             <InfoRow 
                 label="Skills" 
                 value={
@@ -30,6 +33,43 @@ const JobView: React.FC<JobViewProps> = ({ job }) => {
                     ) : undefined
                 } 
                 icon="🛠️"
+            />
+            <InfoRow 
+                label="Responsibilities"
+                value={
+                    job.responsibilities && job.responsibilities.length > 0 ? (
+                        <ul className="list-disc list-inside space-y-1">
+                            {job.responsibilities.map((item, index) => <li key={index}>{item}</li>)}
+                        </ul>
+                    ) : undefined
+                }
+                icon="📋"
+            />
+            <InfoRow 
+                label="Qualifications"
+                value={
+                    job.qualifications && job.qualifications.length > 0 ? (
+                        <ul className="list-disc list-inside space-y-1">
+                            {job.qualifications.map((item, index) => <li key={index}>{item}</li>)}
+                        </ul>
+                    ) : undefined
+                }
+                icon="✅"
+            />
+            <InfoRow 
+                label="Benefits"
+                value={
+                    job.benefits && job.benefits.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                            {job.benefits.map((benefit, index) => (
+                                <span key={index} className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-300">
+                                    {benefit}
+                                </span>
+                            ))}
+                        </div>
+                    ) : undefined
+                }
+                icon="🎁"
             />
             <InfoRow label="Apply by" value={job.deadline} icon="⏳" />
             <InfoRow 

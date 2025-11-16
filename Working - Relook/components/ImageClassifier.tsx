@@ -4,33 +4,15 @@ import { classifyImageContent } from '../services/geminiService';
 import { 
     ContentType, SourceType, EventData, RecipeData, JobData, PostData, 
     PortfolioData, TutorialData, ProductData, OfferData, AnnouncementData, 
-    ResearchData, UpdateData, TeamSpotlightData, QuoteData, FestivalData
+    ResearchData, UpdateData, TeamSpotlightData, QuoteData, FestivalData, Item
 } from '../types';
 import { PhotoIcon, SparklesIcon, BellIcon } from './IconComponents';
 
+type AddItemPayload = Omit<Item, 'id' | 'user_id' | 'created_at' | 'status' | 'thumbnail_url' | 'reminder_id' | 'deck_ids' | 'design_data' | 'education_data'>;
+
+
 interface ImageClassifierProps {
-    onItemAdded: (data: { 
-        title: string; 
-        summary: string;
-        body: string; 
-        content_type: ContentType; 
-        source_type: SourceType; 
-        tags?: string[];
-        eventData: EventData | null;
-        recipeData?: RecipeData | null;
-        jobData?: JobData | null;
-        postData?: PostData | null;
-        portfolioData?: PortfolioData | null;
-        tutorialData?: TutorialData | null;
-        productData?: ProductData | null;
-        offerData?: OfferData | null;
-        announcementData?: AnnouncementData | null;
-        researchData?: ResearchData | null;
-        updateData?: UpdateData | null;
-        teamSpotlightData?: TeamSpotlightData | null;
-        quoteData?: QuoteData | null;
-        festivalData?: FestivalData | null;
-    }) => void;
+    onItemAdded: (data: AddItemPayload) => void;
 }
 
 type ResultState = {
@@ -49,6 +31,16 @@ type ResultState = {
     teamSpotlightData: TeamSpotlightData | null;
     quoteData: QuoteData | null;
     festivalData: FestivalData | null;
+    headings?: string[];
+    sections?: string[];
+    keyPhrases?: string[];
+    urls?: string[];
+    entities?: string[];
+    sentiment?: string;
+    language?: string;
+    visualElements?: string[];
+    textLayout?: string;
+    imageQuality?: string;
 } | null;
 
 const ImageClassifier: React.FC<ImageClassifierProps> = ({ onItemAdded }) => {
@@ -108,20 +100,30 @@ const ImageClassifier: React.FC<ImageClassifierProps> = ({ onItemAdded }) => {
             content_type: result.classification.category,
             source_type: SourceType.Screenshot,
             tags: result.classification.tags,
-            eventData: result.eventData,
-            recipeData: result.recipeData,
-            jobData: result.jobData,
-            postData: result.postData,
-            portfolioData: result.portfolioData,
-            tutorialData: result.tutorialData,
-            productData: result.productData,
-            offerData: result.offerData,
-            announcementData: result.announcementData,
-            researchData: result.researchData,
-            updateData: result.updateData,
-            teamSpotlightData: result.teamSpotlightData,
-            quoteData: result.quoteData,
-            festivalData: result.festivalData,
+            event_data: result.eventData,
+            recipe_data: result.recipeData,
+            job_data: result.jobData,
+            post_data: result.postData,
+            portfolio_data: result.portfolioData,
+            tutorial_data: result.tutorialData,
+            product_data: result.productData,
+            offer_data: result.offerData,
+            announcement_data: result.announcementData,
+            research_data: result.researchData,
+            update_data: result.updateData,
+            team_spotlight_data: result.teamSpotlightData,
+            quote_data: result.quoteData,
+            festival_data: result.festivalData,
+            headings: result.headings,
+            sections: result.sections,
+            keyPhrases: result.keyPhrases,
+            urls: result.urls,
+            entities: result.entities,
+            sentiment: result.sentiment,
+            language: result.language,
+            visualElements: result.visualElements,
+            textLayout: result.textLayout,
+            imageQuality: result.imageQuality,
         });
         resetState();
     }
