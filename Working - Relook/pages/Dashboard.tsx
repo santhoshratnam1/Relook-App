@@ -4,7 +4,7 @@ import RecentSaves from '../components/RecentSaves';
 import Classifier from '../components/Classifier';
 import ImageClassifier from '../components/ImageClassifier';
 import DailyMissions from '../components/DailyMissions';
-import { User, Rewards, Item, ContentType, SourceType, ExtractedEvent, Mission, Achievement, RecipeData } from '../types';
+import { User, Rewards, Item, ContentType, SourceType, ExtractedEvent, Mission, Achievement, RecipeData, JobData } from '../types';
 
 interface DashboardProps {
   user: User;
@@ -15,11 +15,13 @@ interface DashboardProps {
   equippedItems: { [key: string]: string };
   onItemAdded: (data: { 
     title: string; 
+    summary: string;
     body: string; 
     content_type: ContentType; 
     source_type: SourceType; 
     extractedEvent: ExtractedEvent | null;
     recipeData?: RecipeData | null;
+    jobData?: JobData | null;
   }) => void;
   onNavigate: (path: string) => void;
 }

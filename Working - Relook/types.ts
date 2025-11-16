@@ -1,11 +1,13 @@
 export enum ContentType {
-  Learning = 'learning',
+  Education = 'education',
   Product = 'product',
   Event = 'event',
   Quote = 'quote',
   Meme = 'meme',
   Job = 'job',
   Recipe = 'recipe',
+  Post = 'post',
+  Design = 'design',
   Other = 'other',
 }
 
@@ -45,10 +47,20 @@ export interface RecipeData {
   difficulty?: 'easy' | 'medium' | 'hard';
 }
 
+export interface JobData {
+    company?: string;
+    role: string;
+    skills?: string[];
+    location?: string;
+    jobType?: 'Remote' | 'On-site' | 'Hybrid';
+    seniority?: string;
+}
+
 export interface Item {
   id: string;
   user_id: string;
   title: string;
+  summary: string;
   body: string;
   content_type: ContentType;
   thumbnail_url?: string;
@@ -58,6 +70,7 @@ export interface Item {
   reminder_id?: string;
   deck_ids?: string[];
   recipe_data?: RecipeData;
+  job_data?: JobData;
 }
 
 export interface Deck {

@@ -52,7 +52,7 @@ const Inbox: React.FC<InboxProps> = ({ items, decks, onAutoAddItemToDeck, onDele
                         )}
                         <div className="flex-1 min-w-0">
                             <p className="font-bold text-white line-clamp-2">{item.title}</p>
-                            <p className="text-sm text-gray-400 line-clamp-2 mt-1">{item.body}</p>
+                            <p className="text-sm text-gray-400 line-clamp-2 mt-1">{item.summary}</p>
                             <div className="mt-2 flex items-center flex-wrap gap-2">
                                 {item.content_type === ContentType.Recipe && item.recipe_data ? (
                                   <>

@@ -1,17 +1,19 @@
 import React, { useState, useRef } from 'react';
 import DashboardCard from './DashboardCard';
 import { classifyImageContent } from '../services/geminiService';
-import { ContentType, SourceType, ExtractedEvent, RecipeData } from '../types';
+import { ContentType, SourceType, ExtractedEvent, RecipeData, JobData } from '../types';
 import { PhotoIcon, SparklesIcon, BellIcon } from './IconComponents';
 
 interface ImageClassifierProps {
     onItemAdded: (data: { 
         title: string; 
+        summary: string;
         body: string; 
         content_type: ContentType; 
         source_type: SourceType; 
         extractedEvent: ExtractedEvent | null;
         recipeData?: RecipeData | null;
+        jobData?: JobData | null;
     }) => void;
 }
 
@@ -19,6 +21,7 @@ type ResultState = {
     classification: { category: ContentType; title: string; summary: string; body: string; };
     extractedEvent: ExtractedEvent | null;
     recipeData: RecipeData | null;
+    jobData: JobData | null;
 } | null;
 
 const ImageClassifier: React.FC<ImageClassifierProps> = ({ onItemAdded }) => {
@@ -73,11 +76,13 @@ const ImageClassifier: React.FC<ImageClassifierProps> = ({ onItemAdded }) => {
         if (!result) return;
         onItemAdded({
             title: result.classification.title,
+            summary: result.classification.summary,
             body: result.classification.body,
             content_type: result.classification.category,
             source_type: SourceType.Screenshot,
             extractedEvent: result.extractedEvent,
             recipeData: result.recipeData,
+            jobData: result.jobData,
         });
         resetState();
     }

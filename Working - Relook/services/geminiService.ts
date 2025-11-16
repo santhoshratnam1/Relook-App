@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { ContentType, ExtractedEvent, RecipeData } from '../types';
+import { ContentType, ExtractedEvent, RecipeData, JobData } from '../types';
 
 let ai: GoogleGenAI | null = null;
 
@@ -50,13 +50,27 @@ const recipeSchemaProperties = {
     required: ['ingredients', 'steps']
 };
 
+const jobSchemaProperties = {
+    type: Type.OBJECT,
+    description: 'If this is a job posting, extract structured job data.',
+    properties: {
+        company: { type: Type.STRING, description: 'The name of the hiring company.' },
+        role: { type: Type.STRING, description: 'The job title or role.' },
+        skills: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'List of required skills, tools, or technologies.' },
+        location: { type: Type.STRING, description: 'The job location (e.g., "City, Country").' },
+        jobType: { type: Type.STRING, enum: ['Remote', 'On-site', 'Hybrid'], description: 'The type of employment (Remote, On-site, or Hybrid).' },
+        seniority: { type: Type.STRING, description: 'The seniority level, e.g., "Senior", "Junior", "Lead".' }
+    },
+    required: ['role']
+};
+
 const classificationSchema = {
     type: Type.OBJECT,
     properties: {
         category: {
             type: Type.STRING,
             enum: Object.values(ContentType),
-            description: 'The most likely category for the content. Use "recipe" for food-related content.'
+            description: 'The most likely category for the content. Use "recipe" for food-related content and "job" for job postings.'
         },
         title: {
             type: Type.STRING,
@@ -67,6 +81,7 @@ const classificationSchema = {
             description: 'A one-sentence summary of the content.'
         },
         recipe: recipeSchemaProperties,
+        job: jobSchemaProperties,
         event: {
             type: Type.OBJECT,
             description: 'If a specific date or deadline is mentioned, extract event details.',
@@ -96,7 +111,7 @@ const imageClassificationSchema = {
         category: {
             type: Type.STRING,
             enum: Object.values(ContentType),
-            description: 'The most likely category. Use "recipe" for any food/cooking content.'
+            description: 'The most likely category. Use "recipe" for any food/cooking content and "job" for job postings.'
         },
         title: {
             type: Type.STRING,
@@ -111,6 +126,7 @@ const imageClassificationSchema = {
             description: 'The full text extracted from the image. If no significant text is found, provide a one-sentence description.'
         },
         recipe: recipeSchemaProperties,
+        job: jobSchemaProperties,
         event: {
             type: Type.OBJECT,
             description: 'If a specific date or deadline is mentioned, extract event details.',
@@ -132,11 +148,13 @@ type ClassificationResult = {
     classification: { category: ContentType; title: string; summary: string };
     extractedEvent: ExtractedEvent | null;
     recipeData: RecipeData | null;
+    jobData: JobData | null;
 }
 type ImageClassificationResult = {
     classification: { category: ContentType; title: string; summary: string; body: string; };
     extractedEvent: ExtractedEvent | null;
     recipeData: RecipeData | null;
+    jobData: JobData | null;
 }
 
 const parseAndValidateClassification = (jsonString: string) => {
@@ -155,7 +173,7 @@ export const classifyContent = async (text: string): Promise<ClassificationResul
     try {
         const response = await aiClient.models.generateContent({
             model: "gemini-2.5-flash",
-            contents: `Analyze the following text. Classify it, providing a title, a one-sentence summary. If the text is a recipe, extract structured data. If it contains a specific date, event, or deadline, extract details into an 'event' object. IMPORTANT: If a date is mentioned without a year (e.g., "October 12"), assume it refers to the nearest future date and provide the full YYYY-MM-DD format. Text: "${text}"`,
+            contents: `Analyze the following text. Classify it into a category (e.g., 'Education', 'Job', 'Recipe', 'Post', 'Design'), providing a title and one-sentence summary. If the text is a recipe or job posting, extract structured data. If it contains a specific date, event, or deadline, extract details into an 'event' object. IMPORTANT: If a date is mentioned without a year (e.g., "October 12"), assume it refers to the nearest future date and provide the full YYYY-MM-DD format. Text: "${text}"`,
             config: {
                 responseMimeType: "application/json",
                 responseSchema: classificationSchema,
@@ -163,14 +181,15 @@ export const classifyContent = async (text: string): Promise<ClassificationResul
         });
         
         const parsedJson = JSON.parse(response.text.trim());
-        const { event, recipe, ...classificationData } = parsedJson;
+        const { event, recipe, job, ...classificationData } = parsedJson;
         
         const classification = parseAndValidateClassification(JSON.stringify(classificationData));
 
         const extractedEvent: ExtractedEvent | null = event || null;
         const recipeData: RecipeData | null = recipe && recipe.ingredients && recipe.steps ? recipe : null;
+        const jobData: JobData | null = job || null;
 
-        return { classification, extractedEvent, recipeData };
+        return { classification, extractedEvent, recipeData, jobData };
     } catch (error) {
         console.error("Error classifying content with Gemini:", error);
         return null;
@@ -186,11 +205,8 @@ export const classifyImageContent = async (imageData: string, mimeType: string):
         const textPart = { 
             text: `Analyze this image carefully:
 1. Extract ALL visible text using OCR and place in 'body' field
-2. If this is food/recipe content, parse it into structured format:
-   - Extract EVERY ingredient with quantities into the ingredients array
-   - Break down cooking steps into clear, sequential instructions
-   - Identify prep time, cook time, servings if visible
-3. Classify the content type (use "recipe" for food content)
+2. If this is food/recipe content or a job posting, parse it into a structured format.
+3. Classify the content type (e.g., 'Education' for slides, 'Design' for inspiration, 'Job' for listings, 'Post' for social media. Use "recipe" for food content).
 4. Create a descriptive title and summary
 5. Extract any event/date information if present. IMPORTANT: If a date is mentioned without a year (e.g., "October 12"), assume it refers to the nearest future date and provide the full YYYY-MM-DD format.`
         };
@@ -205,13 +221,14 @@ export const classifyImageContent = async (imageData: string, mimeType: string):
         });
 
         const parsedJson = JSON.parse(response.text.trim());
-        const { event, recipe, ...classificationData } = parsedJson;
+        const { event, recipe, job, ...classificationData } = parsedJson;
 
         const classification = parseAndValidateClassification(JSON.stringify(classificationData));
         const extractedEvent: ExtractedEvent | null = event || null;
         const recipeData: RecipeData | null = recipe && recipe.ingredients && recipe.steps ? recipe : null;
+        const jobData: JobData | null = job || null;
 
-        return { classification, extractedEvent, recipeData };
+        return { classification, extractedEvent, recipeData, jobData };
     } catch (error) {
         console.error("Error classifying image content with Gemini:", error);
         return null;

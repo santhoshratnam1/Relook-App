@@ -61,7 +61,7 @@ const DeckDetail: React.FC<DeckDetailProps> = ({ deckId, decks, items, onNavigat
                     )}
                     <div className="flex-1 min-w-0">
                         <p className="font-bold text-white line-clamp-2">{item.title}</p>
-                        <p className="text-sm text-gray-400 line-clamp-2 mt-1">{item.body}</p>
+                        <p className="text-sm text-gray-400 line-clamp-2 mt-1">{item.summary}</p>
                         <div className="mt-2">
                             {item.content_type === ContentType.Recipe && item.recipe_data ? (
                               <div className="flex items-center gap-2 flex-wrap">

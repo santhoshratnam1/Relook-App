@@ -40,7 +40,7 @@ const RecentSaves: React.FC<RecentSavesProps> = ({ items, onNavigate }) => {
                         )}
                         <div className="flex-1 min-w-0">
                             <p className="font-bold text-white line-clamp-2">{item.title}</p>
-                            <p className="text-sm text-gray-400 line-clamp-1 mt-1">{item.body}</p>
+                            <p className="text-sm text-gray-400 line-clamp-1 mt-1">{item.summary}</p>
                             <div className="mt-2 flex items-center gap-2 flex-wrap">
                                  <span className="text-xs capitalize px-2 py-1 rounded-full bg-gradient-to-r from-[#e6f0c630] to-[#f6f2d830] text-[#E6F0C6]">
                                     {item.content_type}

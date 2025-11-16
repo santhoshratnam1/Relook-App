@@ -17,7 +17,7 @@ import RewardModal from './components/RewardModal';
 import AchievementsPage from './pages/AchievementsPage';
 import StorePage from './pages/StorePage';
 import MyStuffPage from './pages/MyStuffPage';
-import { User, Rewards, Item, Reminder, ContentType, ItemStatus, SourceType, ExtractedEvent, Deck, Mission, MissionType, Achievement, RecipeData } from './types';
+import { User, Rewards, Item, Reminder, ContentType, ItemStatus, SourceType, ExtractedEvent, Deck, Mission, MissionType, Achievement, RecipeData, JobData } from './types';
 import { StoreItem } from './data/store';
 import { DAILY_MISSIONS_BLUEPRINT } from './data/missions';
 import { ACHIEVEMENTS_BLUEPRINT } from './data/achievements';
@@ -236,38 +236,84 @@ const App: React.FC = () => {
     });
   }, [updateRewards]);
 
-  const handleAddItem = useCallback((data: { title: string; body: string; content_type: ContentType; source_type: SourceType; extractedEvent: ExtractedEvent | null; recipeData?: RecipeData | null; }) => {
+  const handleAddItem = useCallback((data: { title: string; summary: string; body: string; content_type: ContentType; source_type: SourceType; extractedEvent: ExtractedEvent | null; recipeData?: RecipeData | null; jobData?: JobData | null; }) => {
     if (undoState) clearTimeout(undoState.timeoutId);
-    
+  
     const previousRewards = { ...rewards };
     const newItemId = `item-${Date.now()}`;
     let newReminder: Reminder | undefined = undefined;
-    
-    const newItem: Item = {
+  
+    // 1. Create the base item object
+    let newItem: Item = {
       id: newItemId, user_id: user.id, created_at: new Date(), status: ItemStatus.New,
       thumbnail_url: data.source_type === SourceType.Screenshot ? `https://picsum.photos/seed/${Date.now()}/200/200` : undefined,
-      title: data.title, body: data.body, content_type: data.content_type, source_type: data.source_type,
+      title: data.title, summary: data.summary, body: data.body, content_type: data.content_type, source_type: data.source_type,
       recipe_data: data.recipeData || undefined,
+      job_data: data.jobData || undefined,
     };
-    
+  
+    // 2. Handle Reminders
     if (data.extractedEvent) {
       const { title, date, time } = data.extractedEvent;
       const reminderTime = new Date(`${date}T${time || '09:00:00'}`);
-      if(!isNaN(reminderTime.getTime())) {
-          newReminder = { id: `reminder-${Date.now()}`, item_id: newItemId, title: title, reminder_time: reminderTime };
-          newItem.reminder_id = newReminder.id;
-          setReminders(prev => [newReminder!, ...prev]);
+      if (!isNaN(reminderTime.getTime())) {
+        newReminder = { id: `reminder-${Date.now()}`, item_id: newItemId, title: title, reminder_time: reminderTime };
+        newItem.reminder_id = newReminder.id;
+        setReminders(prev => [newReminder!, ...prev]);
       }
     }
+  
+    // 3. Auto-organize specific content types
+    const AUTO_ORGANIZE_CONFIG: { [key in ContentType]?: string } = {
+        [ContentType.Event]: "Events",
+        [ContentType.Job]: "Jobs",
+        [ContentType.Recipe]: "Recipes",
+        [ContentType.Education]: "Education",
+        [ContentType.Design]: "Designs",
+        [ContentType.Post]: "Posts",
+    };
+
+    let finalDecks = [...decks];
+    let xpToAdd = XP_PER_ITEM;
+    let newDeckCreated = false;
+  
+    const deckName = AUTO_ORGANIZE_CONFIG[newItem.content_type];
+    if (deckName) {
+      let autoDeck = finalDecks.find(d => d.title.toLowerCase() === deckName.toLowerCase());
+  
+      if (!autoDeck) {
+        autoDeck = {
+          id: `deck-${Date.now()}`,
+          user_id: user.id,
+          title: deckName,
+          description: `Auto-created for ${newItem.content_type} items`,
+          created_at: new Date(),
+        };
+        finalDecks.unshift(autoDeck);
+        newDeckCreated = true;
+      }
+  
+      newItem.deck_ids = [...(newItem.deck_ids || []), autoDeck.id];
+      newItem.status = ItemStatus.Reviewed; // Move out of Inbox
+  
+      xpToAdd += XP_PER_ADD_TO_DECK;
+      updateMissionProgress(MissionType.ORGANIZE_ITEM);
+    }
+  
+    // 4. Update states
     const newItems = [newItem, ...items];
     setItems(newItems);
-    updateRewards(XP_PER_ITEM);
+    if (newDeckCreated) {
+      setDecks(finalDecks);
+    }
+  
+    updateRewards(xpToAdd);
     updateMissionProgress(MissionType.CLASSIFY_FIRST_ITEM);
-    checkAchievements(newItems.length, decks.length, rewards.streak);
-
+    checkAchievements(newItems.length, finalDecks.length, rewards.streak);
+  
     const timeoutId = window.setTimeout(() => setUndoState(null), 5000);
     setUndoState({ item: newItem, reminder: newReminder, previousRewards, timeoutId });
-  }, [undoState, rewards, user.id, items, checkAchievements, decks.length, updateMissionProgress, updateRewards]);
+  }, [undoState, rewards, user.id, items, decks, checkAchievements, updateMissionProgress, updateRewards]);
 
   const handleUndo = useCallback(() => {
     if (!undoState) return;

@@ -4,6 +4,7 @@ import { ScreenshotIcon, ArrowLeftIcon, DotsVerticalIcon, EditIcon, TrashIcon, B
 import AddToDeckModal from '../components/AddToDeckModal';
 import EditItemModal from '../components/EditItemModal';
 import RecipeView from '../components/RecipeView';
+import JobView from '../components/JobView';
 import ImageLoader from '../components/ImageLoader';
 
 interface ItemDetailProps {
@@ -104,6 +105,14 @@ const ItemDetail: React.FC<ItemDetailProps> = ({ itemId, items, decks, reminders
         {item.content_type === ContentType.Recipe && item.recipe_data ? (
             <div className="py-4 border-y border-white/10">
                 <RecipeView recipe={item.recipe_data} />
+            </div>
+        ) : item.content_type === ContentType.Job && item.job_data ? (
+            <div className="py-4 border-y border-white/10">
+                <JobView job={item.job_data} />
+                <details className="mt-4 group">
+                    <summary className="text-sm text-gray-400 cursor-pointer list-none group-hover:text-white transition-colors">View original post</summary>
+                    <p className="text-gray-300 whitespace-pre-wrap leading-relaxed pt-2 mt-2 border-t border-white/10">{item.body}</p>
+                </details>
             </div>
         ) : (
             <div className="text-gray-300 whitespace-pre-wrap leading-relaxed py-4 border-y border-white/10">
