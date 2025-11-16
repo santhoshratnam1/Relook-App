@@ -54,20 +54,19 @@ const Inbox: React.FC<InboxProps> = ({ items, decks, onAutoAddItemToDeck, onDele
                             <p className="font-bold text-white line-clamp-2">{item.title}</p>
                             <p className="text-sm text-gray-400 line-clamp-2 mt-1">{item.summary}</p>
                             <div className="mt-2 flex items-center flex-wrap gap-2">
-                                {item.content_type === ContentType.Recipe && item.recipe_data ? (
-                                  <>
-                                    <span className="text-xs capitalize px-2 py-1 rounded-full bg-gradient-to-r from-[#e6f0c630] to-[#f6f2d830] text-[#E6F0C6]">
-                                      {item.content_type}
-                                    </span>
+                                <span className="text-xs capitalize px-2 py-1 rounded-full bg-gradient-to-r from-[#e6f0c630] to-[#f6f2d830] text-[#E6F0C6]">
+                                    {item.content_type}
+                                </span>
+                                {item.recipe_data && (
                                     <span className="text-xs px-2 py-1 rounded-full bg-orange-500/20 text-orange-300 flex items-center gap-1">
                                       🍳 {item.recipe_data.ingredients.length} ingredients
                                     </span>
-                                  </>
-                                ) : (
-                                  <span className="text-xs capitalize px-2 py-1 rounded-full bg-gradient-to-r from-[#e6f0c630] to-[#f6f2d830] text-[#E6F0C6]">
-                                    {item.content_type}
-                                  </span>
                                 )}
+                                {item.tags?.slice(0, 2).map((tag, i) => (
+                                    <span key={i} className="text-xs px-2 py-1 rounded-full bg-slate-600/70 text-slate-300">
+                                        {tag}
+                                    </span>
+                                ))}
                                 {item.reminder_id && (
                                   <span className="text-xs px-2 py-1 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center gap-1">
                                     <BellIcon className="w-3 h-3" />

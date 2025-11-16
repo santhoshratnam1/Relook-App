@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import DashboardCard from './DashboardCard';
 import { classifyContent } from '../services/geminiService';
-import { ContentType, SourceType, ExtractedEvent, RecipeData, JobData } from '../types';
+import { 
+    ContentType, SourceType, EventData, RecipeData, JobData, PostData, 
+    PortfolioData, TutorialData, ProductData, OfferData, AnnouncementData, 
+    ResearchData, UpdateData, TeamSpotlightData, QuoteData, FestivalData
+} from '../types';
 import { SparklesIcon, BellIcon } from './IconComponents';
 
 interface ClassifierProps {
@@ -10,18 +14,41 @@ interface ClassifierProps {
         summary: string;
         body: string; 
         content_type: ContentType; 
-        source_type: SourceType; 
-        extractedEvent: ExtractedEvent | null;
+        source_type: SourceType;
+        tags?: string[];
+        eventData: EventData | null;
         recipeData?: RecipeData | null;
         jobData?: JobData | null;
+        postData?: PostData | null;
+        portfolioData?: PortfolioData | null;
+        tutorialData?: TutorialData | null;
+        productData?: ProductData | null;
+        offerData?: OfferData | null;
+        announcementData?: AnnouncementData | null;
+        researchData?: ResearchData | null;
+        updateData?: UpdateData | null;
+        teamSpotlightData?: TeamSpotlightData | null;
+        quoteData?: QuoteData | null;
+        festivalData?: FestivalData | null;
     }) => void;
 }
 
 type ResultState = {
-    classification: { category: ContentType; title: string; summary: string };
-    extractedEvent: ExtractedEvent | null;
+    classification: { category: ContentType; title: string; summary: string; tags?: string[] };
+    eventData: EventData | null;
     recipeData: RecipeData | null;
     jobData: JobData | null;
+    postData: PostData | null;
+    portfolioData: PortfolioData | null;
+    tutorialData: TutorialData | null;
+    productData: ProductData | null;
+    offerData: OfferData | null;
+    announcementData: AnnouncementData | null;
+    researchData: ResearchData | null;
+    updateData: UpdateData | null;
+    teamSpotlightData: TeamSpotlightData | null;
+    quoteData: QuoteData | null;
+    festivalData: FestivalData | null;
 } | null;
 
 const Classifier: React.FC<ClassifierProps> = ({ onItemAdded }) => {
@@ -41,7 +68,7 @@ const Classifier: React.FC<ClassifierProps> = ({ onItemAdded }) => {
 
         try {
             const classificationResult = await classifyContent(text);
-            setResult(classificationResult);
+            setResult(classificationResult as ResultState);
         } catch (err) {
             setError('Failed to classify content. Please try again.');
             console.error(err);
@@ -65,9 +92,21 @@ const Classifier: React.FC<ClassifierProps> = ({ onItemAdded }) => {
             body: text,
             content_type: result.classification.category,
             source_type: SourceType.Manual,
-            extractedEvent: result.extractedEvent,
+            tags: result.classification.tags,
+            eventData: result.eventData,
             recipeData: result.recipeData,
             jobData: result.jobData,
+            postData: result.postData,
+            portfolioData: result.portfolioData,
+            tutorialData: result.tutorialData,
+            productData: result.productData,
+            offerData: result.offerData,
+            announcementData: result.announcementData,
+            researchData: result.researchData,
+            updateData: result.updateData,
+            teamSpotlightData: result.teamSpotlightData,
+            quoteData: result.quoteData,
+            festivalData: result.festivalData,
         });
         resetState();
     }
@@ -102,9 +141,9 @@ const Classifier: React.FC<ClassifierProps> = ({ onItemAdded }) => {
                                 <p className="text-sm text-gray-300 mt-1">{result.classification.summary}</p>
                                 <div className="mt-2 flex justify-between items-center">
                                     <span className="text-xs capitalize px-2 py-1 rounded-full bg-gradient-to-r from-[#e6f0c630] to-[#f6f2d830] text-[#E6F0C6]">
-                                        {result.classification.category}
+                                        {result.classification.category.replace('_', ' ')}
                                     </span>
-                                    {result.extractedEvent && (
+                                    {result.eventData && (
                                         <span className="text-xs flex items-center space-x-1 text-cyan-300">
                                             <BellIcon className="w-4 h-4" />
                                             <span>Reminder</span>

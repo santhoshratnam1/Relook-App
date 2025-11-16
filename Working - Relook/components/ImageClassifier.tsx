@@ -1,7 +1,11 @@
 import React, { useState, useRef } from 'react';
 import DashboardCard from './DashboardCard';
 import { classifyImageContent } from '../services/geminiService';
-import { ContentType, SourceType, ExtractedEvent, RecipeData, JobData } from '../types';
+import { 
+    ContentType, SourceType, EventData, RecipeData, JobData, PostData, 
+    PortfolioData, TutorialData, ProductData, OfferData, AnnouncementData, 
+    ResearchData, UpdateData, TeamSpotlightData, QuoteData, FestivalData
+} from '../types';
 import { PhotoIcon, SparklesIcon, BellIcon } from './IconComponents';
 
 interface ImageClassifierProps {
@@ -11,17 +15,40 @@ interface ImageClassifierProps {
         body: string; 
         content_type: ContentType; 
         source_type: SourceType; 
-        extractedEvent: ExtractedEvent | null;
+        tags?: string[];
+        eventData: EventData | null;
         recipeData?: RecipeData | null;
         jobData?: JobData | null;
+        postData?: PostData | null;
+        portfolioData?: PortfolioData | null;
+        tutorialData?: TutorialData | null;
+        productData?: ProductData | null;
+        offerData?: OfferData | null;
+        announcementData?: AnnouncementData | null;
+        researchData?: ResearchData | null;
+        updateData?: UpdateData | null;
+        teamSpotlightData?: TeamSpotlightData | null;
+        quoteData?: QuoteData | null;
+        festivalData?: FestivalData | null;
     }) => void;
 }
 
 type ResultState = {
-    classification: { category: ContentType; title: string; summary: string; body: string; };
-    extractedEvent: ExtractedEvent | null;
+    classification: { category: ContentType; title: string; summary: string; body: string; tags?: string[]; };
+    eventData: EventData | null;
     recipeData: RecipeData | null;
     jobData: JobData | null;
+    postData: PostData | null;
+    portfolioData: PortfolioData | null;
+    tutorialData: TutorialData | null;
+    productData: ProductData | null;
+    offerData: OfferData | null;
+    announcementData: AnnouncementData | null;
+    researchData: ResearchData | null;
+    updateData: UpdateData | null;
+    teamSpotlightData: TeamSpotlightData | null;
+    quoteData: QuoteData | null;
+    festivalData: FestivalData | null;
 } | null;
 
 const ImageClassifier: React.FC<ImageClassifierProps> = ({ onItemAdded }) => {
@@ -53,7 +80,7 @@ const ImageClassifier: React.FC<ImageClassifierProps> = ({ onItemAdded }) => {
                 throw new Error("Could not extract base64 data from file.");
             }
             const classificationResult = await classifyImageContent(base64Data, file.type);
-            setResult(classificationResult);
+            setResult(classificationResult as ResultState);
         } catch (err) {
             setError('Failed to classify image. Please try again.');
             console.error(err);
@@ -80,9 +107,21 @@ const ImageClassifier: React.FC<ImageClassifierProps> = ({ onItemAdded }) => {
             body: result.classification.body,
             content_type: result.classification.category,
             source_type: SourceType.Screenshot,
-            extractedEvent: result.extractedEvent,
+            tags: result.classification.tags,
+            eventData: result.eventData,
             recipeData: result.recipeData,
             jobData: result.jobData,
+            postData: result.postData,
+            portfolioData: result.portfolioData,
+            tutorialData: result.tutorialData,
+            productData: result.productData,
+            offerData: result.offerData,
+            announcementData: result.announcementData,
+            researchData: result.researchData,
+            updateData: result.updateData,
+            teamSpotlightData: result.teamSpotlightData,
+            quoteData: result.quoteData,
+            festivalData: result.festivalData,
         });
         resetState();
     }
@@ -132,9 +171,9 @@ const ImageClassifier: React.FC<ImageClassifierProps> = ({ onItemAdded }) => {
                                 <p className="text-sm text-gray-300 mt-1">{result.classification.summary}</p>
                                  <div className="mt-2 flex justify-between items-center">
                                     <span className="text-xs capitalize px-2 py-1 rounded-full bg-gradient-to-r from-[#e6f0c630] to-[#f6f2d830] text-[#E6F0C6]">
-                                        {result.classification.category}
+                                        {result.classification.category.replace('_', ' ')}
                                     </span>
-                                     {result.extractedEvent && (
+                                     {result.eventData && (
                                         <span className="text-xs flex items-center space-x-1 text-cyan-300">
                                             <BellIcon className="w-4 h-4" />
                                             <span>Reminder</span>

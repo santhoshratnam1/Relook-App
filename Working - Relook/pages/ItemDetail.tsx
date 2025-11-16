@@ -5,6 +5,18 @@ import AddToDeckModal from '../components/AddToDeckModal';
 import EditItemModal from '../components/EditItemModal';
 import RecipeView from '../components/RecipeView';
 import JobView from '../components/JobView';
+import EventView from '../components/EventView';
+import PostView from '../components/PostView';
+import DesignView from '../components/DesignView';
+import EducationView from '../components/EducationView';
+import ProductView from '../components/ProductView';
+import OfferView from '../components/OfferView';
+import AnnouncementView from '../components/AnnouncementView';
+import ResearchView from '../components/ResearchView';
+import UpdateView from '../components/UpdateView';
+import TeamSpotlightView from '../components/TeamSpotlightView';
+import QuoteView from '../components/QuoteView';
+import FestivalView from '../components/FestivalView';
 import ImageLoader from '../components/ImageLoader';
 
 interface ItemDetailProps {
@@ -24,7 +36,6 @@ const SourceInfo: React.FC<{ type: SourceType }> = ({ type }) => {
     const iconMap: Record<SourceType, React.ReactNode> = {
         [SourceType.Screenshot]: <ScreenshotIcon />,
         [SourceType.Manual]: <EditIcon />,
-        // Add other source types here
         [SourceType.Bookmark]: <BookOpenIcon />,
         [SourceType.Instagram]: <BookOpenIcon />,
         [SourceType.LinkedIn]: <BookOpenIcon />,
@@ -43,7 +54,6 @@ const ItemDetail: React.FC<ItemDetailProps> = ({ itemId, items, decks, reminders
   const [isEditOpen, setIsEditOpen] = useState(false);
   
   const item = items.find(i => i.id === itemId);
-  // FIX: Explicitly type the Map to ensure correct type inference for `deck`.
   const decksById = new Map<string, Deck>(decks.map(d => [d.id, d]));
 
   if (!item) {
@@ -63,6 +73,34 @@ const ItemDetail: React.FC<ItemDetailProps> = ({ itemId, items, decks, reminders
   };
 
   const formatDate = (date: Date) => new Date(date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const renderContentView = () => {
+    if (item.content_type === ContentType.Event && item.event_data) return <EventView event={item.event_data} />;
+    if (item.content_type === ContentType.Job && item.job_data) return <JobView job={item.job_data} />;
+    if (item.content_type === ContentType.Product && item.product_data) return <ProductView product={item.product_data} />;
+    if (item.content_type === ContentType.Portfolio && item.portfolio_data) return <DesignView design={item.portfolio_data} />; // Using DesignView for portfolio
+    if (item.content_type === ContentType.Tutorial && item.tutorial_data) return <EducationView education={item.tutorial_data} />; // Using EducationView for tutorial
+    if (item.content_type === ContentType.Offer && item.offer_data) return <OfferView offer={item.offer_data} />;
+    if (item.content_type === ContentType.Announcement && item.announcement_data) return <AnnouncementView announcement={item.announcement_data} />;
+    if (item.content_type === ContentType.Research && item.research_data) return <ResearchView research={item.research_data} />;
+    if (item.content_type === ContentType.Update && item.update_data) return <UpdateView update={item.update_data} />;
+    if (item.content_type === ContentType.TeamSpotlight && item.team_spotlight_data) return <TeamSpotlightView spotlight={item.team_spotlight_data} />;
+    if (item.content_type === ContentType.Quote && item.quote_data) return <QuoteView quote={item.quote_data} />;
+    if (item.content_type === ContentType.Festival && item.festival_data) return <FestivalView festival={item.festival_data} />;
+    if (item.content_type === ContentType.Recipe && item.recipe_data) return <RecipeView recipe={item.recipe_data} />;
+    if (item.content_type === ContentType.Post && item.post_data) return <PostView post={item.post_data} />;
+    
+    // Fallback for older types
+    if (item.content_type === ContentType.Design && item.design_data) return <DesignView design={item.design_data} />;
+    if (item.content_type === ContentType.Education && item.education_data) return <EducationView education={item.education_data} />;
+    
+    return <p>{item.body}</p>;
+  };
+  
+  const hasStructuredData = item.event_data || item.job_data || item.product_data || item.portfolio_data ||
+                            item.tutorial_data || item.offer_data || item.announcement_data || item.research_data ||
+                            item.update_data || item.team_spotlight_data || item.quote_data || item.festival_data ||
+                            item.recipe_data || item.post_data || item.design_data || item.education_data;
 
   return (
     <>
@@ -97,28 +135,20 @@ const ItemDetail: React.FC<ItemDetailProps> = ({ itemId, items, decks, reminders
         
         <div className="space-y-2">
             <span className="text-sm capitalize px-2 py-1 rounded-full bg-gradient-to-r from-[#e6f0c630] to-[#f6f2d830] text-[#E6F0C6]">
-                {item.content_type}
+                {item.content_type.replace('_', ' ')}
             </span>
             <h1 className="text-3xl font-bold text-white">{item.title}</h1>
         </div>
         
-        {item.content_type === ContentType.Recipe && item.recipe_data ? (
-            <div className="py-4 border-y border-white/10">
-                <RecipeView recipe={item.recipe_data} />
-            </div>
-        ) : item.content_type === ContentType.Job && item.job_data ? (
-            <div className="py-4 border-y border-white/10">
-                <JobView job={item.job_data} />
-                <details className="mt-4 group">
-                    <summary className="text-sm text-gray-400 cursor-pointer list-none group-hover:text-white transition-colors">View original post</summary>
-                    <p className="text-gray-300 whitespace-pre-wrap leading-relaxed pt-2 mt-2 border-t border-white/10">{item.body}</p>
-                </details>
-            </div>
-        ) : (
-            <div className="text-gray-300 whitespace-pre-wrap leading-relaxed py-4 border-y border-white/10">
-                {item.body}
-            </div>
-        )}
+        <div className="text-gray-300 whitespace-pre-wrap leading-relaxed py-4 border-y border-white/10">
+          {renderContentView()}
+          {hasStructuredData && (
+              <details className="mt-4 group">
+                  <summary className="text-sm text-gray-400 cursor-pointer list-none group-hover:text-white transition-colors">View original post</summary>
+                  <p className="whitespace-pre-wrap leading-relaxed pt-2 mt-2 border-t border-white/10">{item.body}</p>
+              </details>
+          )}
+        </div>
 
         <div className="space-y-4">
             <div>
@@ -134,6 +164,21 @@ const ItemDetail: React.FC<ItemDetailProps> = ({ itemId, items, decks, reminders
                     </div>
                 </div>
             </div>
+
+            {item.tags && item.tags.length > 0 && (
+                <div>
+                    <h3 className="text-sm font-semibold text-gray-500 mb-2">TAGS</h3>
+                    <div className="bg-[#1a1b1e] border border-white/10 rounded-2xl p-4">
+                        <div className="flex flex-wrap gap-2">
+                            {item.tags.map((tag, index) => (
+                                <span key={index} className="text-xs px-2 py-1 rounded-full bg-slate-600/70 text-slate-300">
+                                    {tag}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {item.reminder_id && (
               <div>

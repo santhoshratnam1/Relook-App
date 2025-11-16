@@ -4,7 +4,11 @@ import RecentSaves from '../components/RecentSaves';
 import Classifier from '../components/Classifier';
 import ImageClassifier from '../components/ImageClassifier';
 import DailyMissions from '../components/DailyMissions';
-import { User, Rewards, Item, ContentType, SourceType, ExtractedEvent, Mission, Achievement, RecipeData, JobData } from '../types';
+import { 
+    User, Rewards, Item, ContentType, SourceType, EventData, Mission, Achievement, RecipeData, 
+    JobData, PostData, PortfolioData, TutorialData, ProductData, OfferData, AnnouncementData, 
+    ResearchData, UpdateData, TeamSpotlightData, QuoteData, FestivalData
+} from '../types';
 
 interface DashboardProps {
   user: User;
@@ -19,9 +23,21 @@ interface DashboardProps {
     body: string; 
     content_type: ContentType; 
     source_type: SourceType; 
-    extractedEvent: ExtractedEvent | null;
+    tags?: string[];
+    eventData: EventData | null;
     recipeData?: RecipeData | null;
     jobData?: JobData | null;
+    postData?: PostData | null;
+    portfolioData?: PortfolioData | null;
+    tutorialData?: TutorialData | null;
+    productData?: ProductData | null;
+    offerData?: OfferData | null;
+    announcementData?: AnnouncementData | null;
+    researchData?: ResearchData | null;
+    updateData?: UpdateData | null;
+    teamSpotlightData?: TeamSpotlightData | null;
+    quoteData?: QuoteData | null;
+    festivalData?: FestivalData | null;
   }) => void;
   onNavigate: (path: string) => void;
 }

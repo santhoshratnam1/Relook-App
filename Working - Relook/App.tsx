@@ -17,7 +17,12 @@ import RewardModal from './components/RewardModal';
 import AchievementsPage from './pages/AchievementsPage';
 import StorePage from './pages/StorePage';
 import MyStuffPage from './pages/MyStuffPage';
-import { User, Rewards, Item, Reminder, ContentType, ItemStatus, SourceType, ExtractedEvent, Deck, Mission, MissionType, Achievement, RecipeData, JobData } from './types';
+import { 
+    User, Rewards, Item, Reminder, ContentType, ItemStatus, SourceType, EventData, Deck, 
+    Mission, MissionType, Achievement, RecipeData, JobData, PostData, PortfolioData, 
+    TutorialData, ProductData, OfferData, AnnouncementData, ResearchData, UpdateData, 
+    TeamSpotlightData, QuoteData, FestivalData
+} from './types';
 import { StoreItem } from './data/store';
 import { DAILY_MISSIONS_BLUEPRINT } from './data/missions';
 import { ACHIEVEMENTS_BLUEPRINT } from './data/achievements';
@@ -50,6 +55,24 @@ const isSameDay = (d1: Date, d2: Date) =>
   d1.getFullYear() === d2.getFullYear() &&
   d1.getMonth() === d2.getMonth() &&
   d1.getDate() === d2.getDate();
+
+type AddItemData = {
+    title: string; summary: string; body: string; content_type: ContentType; source_type: SourceType; tags?: string[];
+    eventData: EventData | null;
+    recipeData?: RecipeData | null;
+    jobData?: JobData | null;
+    postData?: PostData | null;
+    portfolioData?: PortfolioData | null;
+    tutorialData?: TutorialData | null;
+    productData?: ProductData | null;
+    offerData?: OfferData | null;
+    announcementData?: AnnouncementData | null;
+    researchData?: ResearchData | null;
+    updateData?: UpdateData | null;
+    teamSpotlightData?: TeamSpotlightData | null;
+    quoteData?: QuoteData | null;
+    festivalData?: FestivalData | null;
+};
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => JSON.parse(localStorage.getItem('relook-auth') || 'false'));
@@ -236,25 +259,36 @@ const App: React.FC = () => {
     });
   }, [updateRewards]);
 
-  const handleAddItem = useCallback((data: { title: string; summary: string; body: string; content_type: ContentType; source_type: SourceType; extractedEvent: ExtractedEvent | null; recipeData?: RecipeData | null; jobData?: JobData | null; }) => {
+  const handleAddItem = useCallback((data: AddItemData) => {
     if (undoState) clearTimeout(undoState.timeoutId);
   
     const previousRewards = { ...rewards };
     const newItemId = `item-${Date.now()}`;
     let newReminder: Reminder | undefined = undefined;
   
-    // 1. Create the base item object
     let newItem: Item = {
       id: newItemId, user_id: user.id, created_at: new Date(), status: ItemStatus.New,
       thumbnail_url: data.source_type === SourceType.Screenshot ? `https://picsum.photos/seed/${Date.now()}/200/200` : undefined,
       title: data.title, summary: data.summary, body: data.body, content_type: data.content_type, source_type: data.source_type,
-      recipe_data: data.recipeData || undefined,
+      tags: data.tags || undefined,
+      event_data: data.eventData || undefined,
       job_data: data.jobData || undefined,
+      product_data: data.productData || undefined,
+      portfolio_data: data.portfolioData || undefined,
+      tutorial_data: data.tutorialData || undefined,
+      offer_data: data.offerData || undefined,
+      announcement_data: data.announcementData || undefined,
+      research_data: data.researchData || undefined,
+      update_data: data.updateData || undefined,
+      team_spotlight_data: data.teamSpotlightData || undefined,
+      quote_data: data.quoteData || undefined,
+      festival_data: data.festivalData || undefined,
+      recipe_data: data.recipeData || undefined,
+      post_data: data.postData || undefined,
     };
   
-    // 2. Handle Reminders
-    if (data.extractedEvent) {
-      const { title, date, time } = data.extractedEvent;
+    if (data.eventData) {
+      const { title, date, time } = data.eventData;
       const reminderTime = new Date(`${date}T${time || '09:00:00'}`);
       if (!isNaN(reminderTime.getTime())) {
         newReminder = { id: `reminder-${Date.now()}`, item_id: newItemId, title: title, reminder_time: reminderTime };
@@ -263,14 +297,14 @@ const App: React.FC = () => {
       }
     }
   
-    // 3. Auto-organize specific content types
     const AUTO_ORGANIZE_CONFIG: { [key in ContentType]?: string } = {
         [ContentType.Event]: "Events",
         [ContentType.Job]: "Jobs",
         [ContentType.Recipe]: "Recipes",
-        [ContentType.Education]: "Education",
-        [ContentType.Design]: "Designs",
-        [ContentType.Post]: "Posts",
+        [ContentType.Tutorial]: "Tutorials",
+        [ContentType.Portfolio]: "Portfolios",
+        [ContentType.Product]: "Products",
+        [ContentType.Offer]: "Offers",
     };
 
     let finalDecks = [...decks];
@@ -294,13 +328,12 @@ const App: React.FC = () => {
       }
   
       newItem.deck_ids = [...(newItem.deck_ids || []), autoDeck.id];
-      newItem.status = ItemStatus.Reviewed; // Move out of Inbox
+      newItem.status = ItemStatus.Reviewed;
   
       xpToAdd += XP_PER_ADD_TO_DECK;
       updateMissionProgress(MissionType.ORGANIZE_ITEM);
     }
   
-    // 4. Update states
     const newItems = [newItem, ...items];
     setItems(newItems);
     if (newDeckCreated) {
@@ -342,7 +375,6 @@ const App: React.FC = () => {
     const item = items.find(i => i.id === itemId);
     if (!item || item.deck_ids?.includes(deckId)) return;
   
-    // Simply add to deck without touching reminders
     setItems(prevItems => prevItems.map(i => 
       i.id === itemId 
         ? { ...i, deck_ids: [...(i.deck_ids || []), deckId] } 
@@ -370,7 +402,6 @@ const App: React.FC = () => {
       const newDecks = [newDeck, ...decks];
       setDecks(newDecks);
       
-      // Add to deck WITHOUT modifying reminder
       setItems(prev => prev.map(i => 
         i.id === item.id 
           ? { ...i, deck_ids: [newDeck.id] }
@@ -403,73 +434,49 @@ const App: React.FC = () => {
     if (!itemToUpdate) return;
   
     try {
-      // 1. Analyze new text for an event
       const classificationResult = await classifyContent(data.body);
-      const newEvent = classificationResult?.extractedEvent;
+      const newEvent = classificationResult?.eventData;
   
-      // 2. Get current reminder state
       const oldReminderId = itemToUpdate.reminder_id;
       const oldReminder = oldReminderId ? reminders.find(r => r.id === oldReminderId) : null;
   
-      // 3. Apply state change logic
       let nextReminders = [...reminders];
       let updatedItem: Item = { ...itemToUpdate, ...data };
       
-      // Case: New text has an event
       if (newEvent) {
         const reminderTime = new Date(`${newEvent.date}T${newEvent.time || '09:00:00'}`);
         if (isNaN(reminderTime.getTime())) {
           console.error('Invalid date from AI');
-          // Continue without updating reminder
           setItems(prevItems => prevItems.map(item => item.id === itemId ? updatedItem : item));
           return;
         }
   
         if (oldReminder) {
-          // A: T, B: T, C: T -> Update existing reminder
           const reminderIndex = nextReminders.findIndex(r => r.id === oldReminder.id);
           if (reminderIndex !== -1) {
-            nextReminders[reminderIndex] = { 
-              ...oldReminder, 
-              title: newEvent.title, 
-              reminder_time: reminderTime 
-            };
+            nextReminders[reminderIndex] = { ...oldReminder, title: newEvent.title, reminder_time: reminderTime };
           }
         } else {
-          // A: T, B: F, C: T -> Create new reminder (fix inconsistency)
-          // A: F, B: -, C: T -> Create new reminder
           if (oldReminderId) {
-            // Clean up any dangling reminder references
             nextReminders = nextReminders.filter(r => r.id !== oldReminderId);
           }
-          const newReminder = { 
-            id: `reminder-${Date.now()}`, 
-            item_id: itemId, 
-            title: newEvent.title, 
-            reminder_time: reminderTime 
-          };
+          const newReminder = { id: `reminder-${Date.now()}`, item_id: itemId, title: newEvent.title, reminder_time: reminderTime };
           nextReminders = [newReminder, ...nextReminders];
           updatedItem.reminder_id = newReminder.id;
         }
       } else {
-        // Case: New text has NO event
         if (oldReminder) {
-          // A: T, B: T, C: F -> Delete reminder
           nextReminders = nextReminders.filter(r => r.id !== oldReminder.id);
           delete updatedItem.reminder_id;
         } else if (oldReminderId) {
-          // A: T, B: F, C: F -> Fix inconsistency by removing dangling ID
           delete updatedItem.reminder_id;
         }
-        // A: F, B: -, C: F -> Do nothing (already correct)
       }
       
-      // 4. Update state
       setReminders(nextReminders);
       setItems(prevItems => prevItems.map(item => item.id === itemId ? updatedItem : item));
     } catch (error) {
       console.error('Error updating item:', error);
-      // On error, just update the text without touching reminders
       setItems(prevItems => prevItems.map(item => 
         item.id === itemId ? { ...item, ...data } : item
       ));

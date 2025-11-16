@@ -1,35 +1,27 @@
 import React from 'react';
 import { JobData } from '../types';
+import InfoRow from './InfoRow';
 
 interface JobViewProps {
   job: JobData;
 }
 
-const JobInfoRow: React.FC<{ label: string; value?: string | React.ReactNode; }> = ({ label, value }) => {
-    if (!value) return null;
-    return (
-        <div className="grid grid-cols-3 gap-2 py-3 border-b border-white/10 last:border-b-0">
-            <dt className="text-sm font-semibold text-gray-400">{label}</dt>
-            <dd className="text-sm text-white col-span-2">{value}</dd>
-        </div>
-    );
-};
-
 const JobView: React.FC<JobViewProps> = ({ job }) => {
   return (
     <div className="space-y-4">
         <dl>
-            <JobInfoRow label="Role" value={job.role} />
-            <JobInfoRow label="Company" value={job.company} />
-            <JobInfoRow label="Seniority" value={job.seniority} />
-            <JobInfoRow label="Location" value={job.location} />
-            <JobInfoRow label="Type" value={job.jobType} />
-            <JobInfoRow 
+            <InfoRow label="Role" value={job.role} icon="🧑‍💻" />
+            <InfoRow label="Company" value={job.company} icon="🏢" />
+            <InfoRow label="Location" value={job.location} icon="📍" />
+            <InfoRow label="Type" value={job.jobType} icon="📄" />
+            <InfoRow label="Salary" value={job.salary} icon="💰" />
+            <InfoRow label="Experience" value={job.experience} icon="📈" />
+            <InfoRow 
                 label="Skills" 
                 value={
-                    job.skills && job.skills.length > 0 ? (
+                    job.skillsRequired && job.skillsRequired.length > 0 ? (
                         <div className="flex flex-wrap gap-2">
-                            {job.skills.map((skill, index) => (
+                            {job.skillsRequired.map((skill, index) => (
                                 <span key={index} className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-300">
                                     {skill}
                                 </span>
@@ -37,6 +29,19 @@ const JobView: React.FC<JobViewProps> = ({ job }) => {
                         </div>
                     ) : undefined
                 } 
+                icon="🛠️"
+            />
+            <InfoRow label="Apply by" value={job.deadline} icon="⏳" />
+            <InfoRow 
+                label="Apply At" 
+                value={
+                    job.applyLink ? (
+                        <a href={job.applyLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline break-all">
+                            {job.applyLink}
+                        </a>
+                    ) : undefined
+                }
+                icon="🔗"
             />
         </dl>
     </div>

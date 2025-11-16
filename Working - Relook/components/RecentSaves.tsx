@@ -45,6 +45,11 @@ const RecentSaves: React.FC<RecentSavesProps> = ({ items, onNavigate }) => {
                                  <span className="text-xs capitalize px-2 py-1 rounded-full bg-gradient-to-r from-[#e6f0c630] to-[#f6f2d830] text-[#E6F0C6]">
                                     {item.content_type}
                                 </span>
+                                {item.tags?.slice(0, 2).map((tag, i) => (
+                                    <span key={i} className="text-xs px-2 py-1 rounded-full bg-slate-600/70 text-slate-300">
+                                        {tag}
+                                    </span>
+                                ))}
                                 {item.reminder_id && (
                                   <span className="text-xs px-2 py-1 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center gap-1">
                                     <BellIcon className="w-3 h-3" />
