@@ -1,6 +1,6 @@
 import React from 'react';
 import { User, Rewards } from '../types';
-import { XIcon } from './IconComponents';
+import { XIcon, BellIcon } from './IconComponents';
 import ImageLoader from './ImageLoader';
 
 interface SideMenuProps {
@@ -44,6 +44,10 @@ const SideMenu: React.FC<SideMenuProps> = ({ isOpen, onClose, user, rewards, onN
           </div>
           
           <div className="space-y-2 pt-4 border-t border-white/10">
+            <button onClick={() => handleNavigate('/reminders')} className="w-full text-left p-3 rounded-lg hover:bg-white/10 text-white transition-colors flex items-center space-x-3">
+              <BellIcon className="w-5 h-5 text-gray-300"/>
+              <span>Reminders</span>
+            </button>
             <button onClick={() => handleNavigate('/my-stuff')} className="w-full text-left p-3 rounded-lg hover:bg-white/10 text-white transition-colors">
               My Stuff
             </button>

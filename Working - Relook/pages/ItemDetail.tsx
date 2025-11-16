@@ -12,7 +12,7 @@ interface ItemDetailProps {
   decks: Deck[];
   onAddItemToDeck: (itemId: string, deckId: string) => void;
   onCreateDeck: (deckData: { title: string; description: string }) => void;
-  onUpdateItem: (itemId: string, data: { title: string, body: string }) => void;
+  onUpdateItem: (itemId: string, data: { title: string, body: string }) => Promise<void>;
   onDeleteItem: (itemId: string) => void;
   onNavigate: (path: string) => void;
   onBack: () => void;

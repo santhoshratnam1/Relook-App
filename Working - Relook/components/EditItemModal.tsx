@@ -6,17 +6,17 @@ import { XIcon } from './IconComponents';
 interface EditItemModalProps {
   item: Item;
   onClose: () => void;
-  onSave: (data: { title: string; body: string }) => void;
+  onSave: (data: { title: string; body: string }) => Promise<void>;
 }
 
 const EditItemModal: React.FC<EditItemModalProps> = ({ item, onClose, onSave }) => {
   const [title, setTitle] = useState(item.title);
   const [body, setBody] = useState(item.body);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (title.trim()) {
-      onSave({ title, body });
+      await onSave({ title, body });
       onClose();
     }
   };

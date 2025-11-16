@@ -21,6 +21,7 @@ import { User, Rewards, Item, Reminder, ContentType, ItemStatus, SourceType, Ext
 import { StoreItem } from './data/store';
 import { DAILY_MISSIONS_BLUEPRINT } from './data/missions';
 import { ACHIEVEMENTS_BLUEPRINT } from './data/achievements';
+import { classifyContent } from './services/geminiService';
 
 const initialUser: User = {
   id: 'user-123',
@@ -347,11 +348,61 @@ const App: React.FC = () => {
     }
   }, [reminders, updateMissionProgress, updateRewards]);
 
-  const handleUpdateItem = useCallback((itemId: string, data: { title: string, body: string }) => {
-    setItems(prevItems => prevItems.map(item => 
-      item.id === itemId ? { ...item, ...data } : item
-    ));
-  }, []);
+  const handleUpdateItem = useCallback(async (itemId: string, data: { title: string; body: string }) => {
+    const itemToUpdate = items.find(i => i.id === itemId);
+    if (!itemToUpdate) return;
+
+    // 1. Analyze new text for an event
+    const classificationResult = await classifyContent(data.body);
+    const newEvent = classificationResult?.extractedEvent;
+
+    // 2. Get current reminder state
+    const oldReminderId = itemToUpdate.reminder_id;
+    const oldReminder = oldReminderId ? reminders.find(r => r.id === oldReminderId) : null;
+
+    // 3. Apply state change logic
+    let nextReminders = [...reminders];
+    let updatedItem: Item = { ...itemToUpdate, ...data };
+    
+    // Case: New text has an event
+    if (newEvent) {
+        const reminderTime = new Date(`${newEvent.date}T${newEvent.time || '09:00:00'}`);
+        if (isNaN(reminderTime.getTime())) return; // Invalid date from AI, do nothing.
+
+        if (oldReminder) {
+            // A: T, B: T, C: T -> Update reminder
+            const reminderIndex = nextReminders.findIndex(r => r.id === oldReminder.id);
+            nextReminders[reminderIndex] = { ...oldReminder, title: newEvent.title, reminder_time: reminderTime };
+        } else {
+            // A: T, B: F, C: T -> Create new reminder, fix inconsistency
+            // A: F, B: -, C: T -> Create new reminder
+            // If there was a dangling ID, filter out any potential ghost reminder first.
+            if (oldReminderId) {
+                nextReminders = nextReminders.filter(r => r.id !== oldReminderId);
+            }
+            const newReminder = { id: `reminder-${Date.now()}`, item_id: itemId, title: newEvent.title, reminder_time: reminderTime };
+            nextReminders.push(newReminder);
+            updatedItem.reminder_id = newReminder.id;
+        }
+    } 
+    // Case: New text has NO event
+    else {
+        if (oldReminder) {
+            // A: T, B: T, C: F -> Delete reminder
+            nextReminders = nextReminders.filter(r => r.id !== oldReminder.id);
+            delete updatedItem.reminder_id;
+        } else if (oldReminderId) {
+            // A: T, B: F, C: F -> Fix inconsistency by removing dangling ID
+            delete updatedItem.reminder_id;
+        }
+        // A: F, B: -, C: F -> Do nothing, which is correct.
+    }
+    
+    // 4. Update state
+    setReminders(nextReminders);
+    setItems(prevItems => prevItems.map(item => item.id === itemId ? updatedItem : item));
+    
+  }, [items, reminders]);
 
   const handleDeleteItem = useCallback((itemId: string) => {
     const itemToDelete = items.find(i => i.id === itemId);
