@@ -22,7 +22,7 @@ type ResultState = {
 } | null;
 
 const Classifier: React.FC<ClassifierProps> = ({ onItemAdded }) => {
-    const [text, setText] = useState('Apple Vision Pro is a mixed reality headset developed by Apple Inc. It was announced on June 5, 2023, at Apple\'s Worldwide Developers Conference, and pre-orders began on January 19, 2024.');
+    const [text, setText] = useState('');
     const [result, setResult] = useState<ResultState>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);

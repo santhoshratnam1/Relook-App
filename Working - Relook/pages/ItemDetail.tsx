@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Item, Deck, SourceType, ContentType } from '../types';
-import { ScreenshotIcon, ArrowLeftIcon, DotsVerticalIcon, EditIcon, TrashIcon, BookOpenIcon } from '../components/IconComponents';
+import { Item, Deck, Reminder, SourceType, ContentType } from '../types';
+import { ScreenshotIcon, ArrowLeftIcon, DotsVerticalIcon, EditIcon, TrashIcon, BookOpenIcon, BellIcon } from '../components/IconComponents';
 import AddToDeckModal from '../components/AddToDeckModal';
 import EditItemModal from '../components/EditItemModal';
 import RecipeView from '../components/RecipeView';
@@ -10,6 +10,7 @@ interface ItemDetailProps {
   itemId: string;
   items: Item[];
   decks: Deck[];
+  reminders: Reminder[];
   onAddItemToDeck: (itemId: string, deckId: string) => void;
   onCreateDeck: (deckData: { title: string; description: string }) => void;
   onUpdateItem: (itemId: string, data: { title: string, body: string }) => Promise<void>;
@@ -35,13 +36,14 @@ const SourceInfo: React.FC<{ type: SourceType }> = ({ type }) => {
     );
 };
 
-const ItemDetail: React.FC<ItemDetailProps> = ({ itemId, items, decks, onAddItemToDeck, onCreateDeck, onUpdateItem, onDeleteItem, onNavigate, onBack }) => {
+const ItemDetail: React.FC<ItemDetailProps> = ({ itemId, items, decks, reminders, onAddItemToDeck, onCreateDeck, onUpdateItem, onDeleteItem, onNavigate, onBack }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAddToDeckOpen, setIsAddToDeckOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   
   const item = items.find(i => i.id === itemId);
-  const decksById = new Map(decks.map(d => [d.id, d]));
+  // FIX: Explicitly type the Map to ensure correct type inference for `deck`.
+  const decksById = new Map<string, Deck>(decks.map(d => [d.id, d]));
 
   if (!item) {
     return (
@@ -123,6 +125,48 @@ const ItemDetail: React.FC<ItemDetailProps> = ({ itemId, items, decks, onAddItem
                     </div>
                 </div>
             </div>
+
+            {item.reminder_id && (
+              <div>
+                <h3 className="text-sm font-semibold text-gray-500 mb-2">REMINDER</h3>
+                <div className="bg-[#1a1b1e] border border-white/10 rounded-2xl p-4">
+                  {(() => {
+                    const reminder = reminders.find(r => r.id === item.reminder_id);
+                    if (!reminder) {
+                      return <p className="text-sm text-gray-400">Reminder data not found</p>;
+                    }
+                    const formatDateTime = (date: Date | string) => {
+                      const d = typeof date === 'string' ? new Date(date) : date;
+                      if (isNaN(d.getTime())) return "Invalid Date";
+                      return d.toLocaleString(undefined, {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      });
+                    };
+                    return (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <BellIcon className="w-5 h-5 text-cyan-300" />
+                          <div>
+                            <p className="font-semibold text-white text-sm">{reminder.title}</p>
+                            <p className="text-xs text-cyan-300">{formatDateTime(reminder.reminder_time)}</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => onNavigate('/reminders')}
+                          className="text-xs text-[#E6F0C6] hover:underline"
+                        >
+                          View all
+                        </button>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
 
             <div>
                 <h3 className="text-sm font-semibold text-gray-500 mb-2">DECKS</h3>

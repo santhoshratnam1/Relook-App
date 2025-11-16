@@ -1,7 +1,7 @@
 import React from 'react';
 import { Item, SourceType, Deck, ContentType } from '../types';
 import DashboardCard from '../components/DashboardCard';
-import { ScreenshotIcon } from '../components/IconComponents';
+import { ScreenshotIcon, BellIcon } from '../components/IconComponents';
 import SwipeableItemCard from '../components/SwipeableItemCard';
 import ImageLoader from '../components/ImageLoader';
 
@@ -23,7 +23,8 @@ const SourceIcon = ({ type }: { type: SourceType }) => {
 }
 
 const Inbox: React.FC<InboxProps> = ({ items, decks, onAutoAddItemToDeck, onDeleteItem, onNavigate }) => {
-  const decksById = new Map(decks.map(d => [d.id, d]));
+  // FIX: Explicitly type the Map to ensure correct type inference for `deck`.
+  const decksById = new Map<string, Deck>(decks.map(d => [d.id, d]));
 
   return (
     <>
@@ -65,6 +66,12 @@ const Inbox: React.FC<InboxProps> = ({ items, decks, onAutoAddItemToDeck, onDele
                                 ) : (
                                   <span className="text-xs capitalize px-2 py-1 rounded-full bg-gradient-to-r from-[#e6f0c630] to-[#f6f2d830] text-[#E6F0C6]">
                                     {item.content_type}
+                                  </span>
+                                )}
+                                {item.reminder_id && (
+                                  <span className="text-xs px-2 py-1 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center gap-1">
+                                    <BellIcon className="w-3 h-3" />
+                                    <span>Reminder</span>
                                   </span>
                                 )}
                                 {item.deck_ids?.map(deckId => {

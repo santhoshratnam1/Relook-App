@@ -27,7 +27,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             <input
               type="email"
               placeholder="Email"
-              defaultValue="alex@relook.app"
               className="w-full p-3 bg-[#1a1b1e] border border-white/10 rounded-lg focus:ring-2 focus:ring-[#E6F0C6] focus:outline-none transition"
               required
             />
@@ -36,7 +35,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             <input
               type="password"
               placeholder="Password"
-              defaultValue="password"
               className="w-full p-3 bg-[#1a1b1e] border border-white/10 rounded-lg focus:ring-2 focus:ring-[#E6F0C6] focus:outline-none transition"
               required
             />

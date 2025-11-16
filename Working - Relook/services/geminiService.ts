@@ -77,7 +77,7 @@ const classificationSchema = {
               },
               date: {
                 type: Type.STRING,
-                description: 'The date of the event in YYYY-MM-DD format.',
+                description: 'The date of the event in YYYY-MM-DD format. If the year is missing, infer the year for the nearest upcoming date.',
               },
               time: {
                 type: Type.STRING,
@@ -116,7 +116,10 @@ const imageClassificationSchema = {
             description: 'If a specific date or deadline is mentioned, extract event details.',
             properties: {
               title: { type: Type.STRING },
-              date: { type: Type.STRING },
+              date: { 
+                type: Type.STRING,
+                description: 'The date of the event in YYYY-MM-DD format. If the year is missing, infer the year for the nearest upcoming date.'
+              },
               time: { type: Type.STRING },
             },
             required: ['title', 'date'],
@@ -152,7 +155,7 @@ export const classifyContent = async (text: string): Promise<ClassificationResul
     try {
         const response = await aiClient.models.generateContent({
             model: "gemini-2.5-flash",
-            contents: `Analyze the following text. Classify it, providing a title, a one-sentence summary. If the text is a recipe, extract structured data like ingredients, steps, and cooking times into a 'recipe' object. If the text contains a specific date, event, or deadline, extract its details into an 'event' object. Text: "${text}"`,
+            contents: `Analyze the following text. Classify it, providing a title, a one-sentence summary. If the text is a recipe, extract structured data. If it contains a specific date, event, or deadline, extract details into an 'event' object. IMPORTANT: If a date is mentioned without a year (e.g., "October 12"), assume it refers to the nearest future date and provide the full YYYY-MM-DD format. Text: "${text}"`,
             config: {
                 responseMimeType: "application/json",
                 responseSchema: classificationSchema,
@@ -189,7 +192,7 @@ export const classifyImageContent = async (imageData: string, mimeType: string):
    - Identify prep time, cook time, servings if visible
 3. Classify the content type (use "recipe" for food content)
 4. Create a descriptive title and summary
-5. Extract any event/date information if present` 
+5. Extract any event/date information if present. IMPORTANT: If a date is mentioned without a year (e.g., "October 12"), assume it refers to the nearest future date and provide the full YYYY-MM-DD format.`
         };
 
         const response = await aiClient.models.generateContent({

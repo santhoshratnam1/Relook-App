@@ -1,6 +1,6 @@
 import React from 'react';
 import { User, Rewards } from '../types';
-import { XIcon, BellIcon } from './IconComponents';
+import { XIcon } from './IconComponents';
 import ImageLoader from './ImageLoader';
 
 interface SideMenuProps {
@@ -44,12 +44,13 @@ const SideMenu: React.FC<SideMenuProps> = ({ isOpen, onClose, user, rewards, onN
           </div>
           
           <div className="space-y-2 pt-4 border-t border-white/10">
-            <button onClick={() => handleNavigate('/reminders')} className="w-full text-left p-3 rounded-lg hover:bg-white/10 text-white transition-colors flex items-center space-x-3">
-              <BellIcon className="w-5 h-5 text-gray-300"/>
-              <span>Reminders</span>
+            <button onClick={() => handleNavigate('/store')} className="w-full text-left p-3 rounded-lg hover:bg-white/10 text-white transition-colors flex items-center space-x-3">
+              <span className="text-xl w-5 text-center">🛍️</span>
+              <span>Store</span>
             </button>
-            <button onClick={() => handleNavigate('/my-stuff')} className="w-full text-left p-3 rounded-lg hover:bg-white/10 text-white transition-colors">
-              My Stuff
+            <button onClick={() => handleNavigate('/my-stuff')} className="w-full text-left p-3 rounded-lg hover:bg-white/10 text-white transition-colors flex items-center space-x-3">
+              <span className="text-xl w-5 text-center">🎒</span>
+              <span>My Stuff</span>
             </button>
             <button onClick={() => handleNavigate('/profile')} className="w-full text-left p-3 rounded-lg hover:bg-white/10 text-white transition-colors">
               Profile & Settings

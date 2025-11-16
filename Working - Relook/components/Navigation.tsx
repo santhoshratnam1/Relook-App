@@ -1,5 +1,5 @@
 import React from 'react';
-import { HomeIcon, InboxIcon, BookOpenIcon, TreeIcon } from './IconComponents';
+import { HomeIcon, InboxIcon, BookOpenIcon, TreeIcon, BellIcon } from './IconComponents';
 import { hapticFeedback } from '../utils/haptics';
 
 interface NavItemProps {
@@ -42,7 +42,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentPath, onNavigate }) => {
     { path: '/', icon: <HomeIcon className="w-6 h-6" />, label: 'Home' },
     { path: '/inbox', icon: <InboxIcon className="w-6 h-6" />, label: 'Inbox' },
     { path: '/tree', icon: <TreeIcon className="w-6 h-6" />, label: 'Tree' },
-    { path: '/store', icon: <span className="text-2xl">🛍️</span>, label: 'Store' },
+    { path: '/reminders', icon: <BellIcon className="w-6 h-6" />, label: 'Reminders' },
     { path: '/decks', icon: <BookOpenIcon className="w-6 h-6" />, label: 'Decks' },
   ];
 

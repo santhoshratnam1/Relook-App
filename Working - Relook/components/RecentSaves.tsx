@@ -1,7 +1,7 @@
 import React from 'react';
 import { Item, SourceType } from '../types';
 import DashboardCard from './DashboardCard';
-import { ScreenshotIcon } from './IconComponents';
+import { ScreenshotIcon, BellIcon } from './IconComponents';
 import ImageLoader from './ImageLoader';
 
 interface RecentSavesProps {
@@ -41,10 +41,16 @@ const RecentSaves: React.FC<RecentSavesProps> = ({ items, onNavigate }) => {
                         <div className="flex-1 min-w-0">
                             <p className="font-bold text-white line-clamp-2">{item.title}</p>
                             <p className="text-sm text-gray-400 line-clamp-1 mt-1">{item.body}</p>
-                            <div className="mt-2">
+                            <div className="mt-2 flex items-center gap-2 flex-wrap">
                                  <span className="text-xs capitalize px-2 py-1 rounded-full bg-gradient-to-r from-[#e6f0c630] to-[#f6f2d830] text-[#E6F0C6]">
                                     {item.content_type}
                                 </span>
+                                {item.reminder_id && (
+                                  <span className="text-xs px-2 py-1 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center gap-1">
+                                    <BellIcon className="w-3 h-3" />
+                                    <span>Reminder</span>
+                                  </span>
+                                )}
                             </div>
                         </div>
                     </div>

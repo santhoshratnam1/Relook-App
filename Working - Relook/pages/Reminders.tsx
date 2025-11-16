@@ -10,7 +10,8 @@ interface RemindersPageProps {
 }
 
 const RemindersPage: React.FC<RemindersPageProps> = ({ reminders, items, onCompleteReminder }) => {
-  const itemsById = new Map(items.map(item => [item.id, item]));
+  // FIX: Explicitly type the Map to ensure correct type inference for `sourceItem`.
+  const itemsById = new Map<string, Item>(items.map(item => [item.id, item]));
 
   const formatDateTime = (date: Date | string) => {
     const d = typeof date === 'string' ? new Date(date) : date;
