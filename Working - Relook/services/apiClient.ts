@@ -51,20 +51,6 @@ export const login = async (email: string, password: string): Promise<{ success:
   // Simulate network delay
   await new Promise(res => setTimeout(res, 500));
   
-  // Test credentials
-  if (email.toLowerCase() === '123@gmail.com' && password === '123') {
-    return { 
-        success: true, 
-        message: 'Login successful!', 
-        user: {
-            id: 'user-123',
-            display_name: 'Alex',
-            email: '123@gmail.com',
-            avatar_url: 'https://picsum.photos/seed/relookuser/100/100',
-        }
-    };
-  }
-
   const users = getUsers();
   const user = users.find((u: any) => u.email.toLowerCase() === email.toLowerCase());
 
