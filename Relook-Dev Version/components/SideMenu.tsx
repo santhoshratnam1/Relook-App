@@ -10,11 +10,9 @@ interface SideMenuProps {
   rewards: Rewards;
   onNavigate: (path: string) => void;
   onLogout: () => void;
-  isDevMode: boolean;
-  onToggleDevMode: () => void;
 }
 
-const SideMenu: React.FC<SideMenuProps> = ({ isOpen, onClose, user, rewards, onNavigate, onLogout, isDevMode, onToggleDevMode }) => {
+const SideMenu: React.FC<SideMenuProps> = ({ isOpen, onClose, user, rewards, onNavigate, onLogout }) => {
   if (!isOpen) return null;
 
   const handleNavigate = (path: string) => {
@@ -72,28 +70,6 @@ const SideMenu: React.FC<SideMenuProps> = ({ isOpen, onClose, user, rewards, onN
             </div>
         </div>
         <div className="mt-auto pt-4 border-t border-white/10 space-y-2">
-            {isDevMode && (
-                <div className="mb-3 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
-                <div className="flex items-center gap-2 mb-1">
-                    <span className="text-lg">🧪</span>
-                    <span className="font-bold text-yellow-300 text-sm">Dev Mode Active</span>
-                </div>
-                <p className="text-xs text-yellow-400/80">Changes won't be saved</p>
-                </div>
-            )}
-            <button 
-              onClick={() => {
-                onToggleDevMode();
-                onClose(); // Close menu after toggling
-              }} 
-              className={`w-full text-left p-3 rounded-lg transition-colors flex items-center space-x-3 ${isDevMode ? 'bg-yellow-500/10 text-yellow-300 hover:bg-yellow-500/20' : 'hover:bg-white/10 text-white'}`}
-            >
-              <span className="text-xl w-5 text-center">🧪</span>
-              <div className="flex-1">
-                <div className="font-semibold">{isDevMode ? 'Exit Test Mode' : 'Enter Test Mode'}</div>
-                {isDevMode && <div className="text-xs text-yellow-400/70">Will clear test data</div>}
-              </div>
-            </button>
             <button onClick={onLogout} className="w-full text-left p-3 rounded-lg hover:bg-red-500/10 text-red-400 transition-colors">
               Logout
             </button>

@@ -7,12 +7,11 @@ interface MyStuffPageProps {
   equippedItems: { [key: string]: string };
   onEquipItem: (item: StoreItem) => void;
   onBack: () => void;
-  isDevMode?: boolean;
 }
 
 type Category = 'avatar' | 'theme' | 'tree' | 'companion';
 
-const MyStuffPage: React.FC<MyStuffPageProps> = ({ equippedItems, onEquipItem, onBack, isDevMode = false }) => {
+const MyStuffPage: React.FC<MyStuffPageProps> = ({ equippedItems, onEquipItem, onBack }) => {
   const [selectedCategory, setSelectedCategory] = useState<Category>('avatar');
   const [purchasedItems] = useState<string[]>(() => 
     JSON.parse(localStorage.getItem('relook-purchased-items') || '[]')
@@ -45,11 +44,6 @@ const MyStuffPage: React.FC<MyStuffPageProps> = ({ equippedItems, onEquipItem, o
       <div className="text-center py-4">
         <h1 className="text-3xl font-bold text-white mb-3">My Stuff</h1>
         <p className="text-gray-400">Your collection of unlocked items.</p>
-        {isDevMode && (
-            <div className="mt-2 mx-auto max-w-xs bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-2">
-            <p className="text-xs text-yellow-300">🧪 Cannot equip items in dev mode</p>
-            </div>
-        )}
       </div>
 
       {/* Category Filter */}

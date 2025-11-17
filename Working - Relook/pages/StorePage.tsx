@@ -9,10 +9,9 @@ interface StorePageProps {
   rewards: Rewards;
   onBack: () => void;
   onPurchase: (itemId: string, price: number) => void;
-  isDevMode?: boolean;
 }
 
-const StorePage: React.FC<StorePageProps> = ({ user, rewards, onBack, onPurchase, isDevMode = false }) => {
+const StorePage: React.FC<StorePageProps> = ({ user, rewards, onBack, onPurchase }) => {
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'avatar' | 'theme' | 'tree' | 'companion'>('all');
   const [purchasedItems, setPurchasedItems] = useState<string[]>(() => 
     JSON.parse(localStorage.getItem('relook-purchased-items') || '[]')
@@ -59,10 +58,6 @@ const StorePage: React.FC<StorePageProps> = ({ user, rewards, onBack, onPurchase
   ];
 
   const handlePurchase = (item: StoreItem) => {
-    if (isDevMode) {
-      alert('⚠️ Cannot purchase items in dev mode. Exit dev mode to unlock real customizations.');
-      return;
-    }
     if (rewards.xp >= item.price && !purchasedItems.includes(item.id)) {
       onPurchase(item.id, item.price);
       const newPurchasedItems = [...purchasedItems, item.id];
@@ -105,11 +100,6 @@ const StorePage: React.FC<StorePageProps> = ({ user, rewards, onBack, onPurchase
       <div className="text-center py-4">
         <h1 className="text-3xl font-bold text-white mb-3">Store</h1>
         <p className="text-gray-400">Spend your XP on customizations.</p>
-        {isDevMode && (
-            <div className="mt-2 mx-auto max-w-xs bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-2">
-            <p className="text-xs text-yellow-300">🧪 Purchases disabled in dev mode</p>
-            </div>
-        )}
       </div>
 
       {/* Category Filter */}
