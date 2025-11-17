@@ -19,6 +19,7 @@ import RewardModal from './components/RewardModal';
 import AchievementsPage from './pages/AchievementsPage';
 import StorePage from './pages/StorePage';
 import MyStuffPage from './pages/MyStuffPage';
+import OnboardingTour from './components/OnboardingTour';
 import { 
     User, Rewards, Item, Reminder, ContentType, ItemStatus, SourceType, EventData, Deck, 
     Mission, MissionType, Achievement
@@ -90,6 +91,7 @@ const App: React.FC = () => {
   
   const [authPage, setAuthPage] = useState<'login' | 'signup'>('login');
   const [registrationSuccessMessage, setRegistrationSuccessMessage] = useState('');
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => { localStorage.setItem('relook-auth', JSON.stringify(isAuthenticated)); }, [isAuthenticated]);
   useEffect(() => { localStorage.setItem('relook-user', JSON.stringify(user)); }, [user]);
@@ -115,6 +117,20 @@ const App: React.FC = () => {
         root.classList.add('theme-sunset-glow');
     }
   }, [equippedItems]);
+
+  useEffect(() => {
+    const onboardingComplete = localStorage.getItem('relook-onboarding-complete') === 'true';
+    if (!onboardingComplete && isAuthenticated && items.length === 0) {
+      // Use a small delay to ensure the dashboard has rendered and elements are available
+      const timer = setTimeout(() => setShowOnboarding(true), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, items.length]);
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    localStorage.setItem('relook-onboarding-complete', 'true');
+  };
 
   const updateRewards = useCallback((xpToAdd: number) => {
     setRewards(prev => {
@@ -632,6 +648,7 @@ const App: React.FC = () => {
           }}
         />
       )}
+      {showOnboarding && <OnboardingTour onComplete={handleOnboardingComplete} />}
       <Navigation currentPath={currentPath} onNavigate={handleNavigate} />
     </div>
   );

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Deck, Item, SourceType, ContentType } from '../types';
 import DashboardCard from '../components/DashboardCard';
-import { ScreenshotIcon, LinkIcon, EditIcon } from '../components/IconComponents';
+import { ScreenshotIcon, LinkIcon, EditIcon, DocumentIcon } from '../components/IconComponents';
 import ImageLoader from '../components/ImageLoader';
 
 interface DeckDetailProps {
@@ -21,6 +21,8 @@ const SourceIcon = ({ type }: { type: SourceType }) => {
             return <LinkIcon className="w-5 h-5 text-gray-400" />;
         case SourceType.Manual:
             return <EditIcon className="w-5 h-5 text-gray-400" />;
+        case SourceType.FileUpload:
+            return <DocumentIcon className="w-5 h-5 text-gray-400" />;
         default:
             return <div className="w-5 h-5 bg-gray-600 rounded-md" />;
     }

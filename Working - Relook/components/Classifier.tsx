@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import DashboardCard from './DashboardCard';
 import { classifyContent } from '../services/geminiService';
 import { 
@@ -7,7 +7,7 @@ import {
     PortfolioData, TutorialData, ProductData, OfferData, AnnouncementData, 
     ResearchData, UpdateData, TeamSpotlightData, QuoteData, FestivalData, Item
 } from '../types';
-import { SparklesIcon, BellIcon } from './IconComponents';
+import { SparklesIcon, BellIcon, DocumentIcon, XIcon } from './IconComponents';
 
 type AddItemPayload = Omit<Item, 'id' | 'user_id' | 'created_at' | 'status' | 'thumbnail_url' | 'reminder_id' | 'deck_ids' | 'design_data' | 'education_data'>;
 
@@ -42,21 +42,38 @@ type ResultState = {
 
 const Classifier: React.FC<ClassifierProps> = ({ onItemAdded }) => {
     const [text, setText] = useState('');
+    const [file, setFile] = useState<File | null>(null);
     const [result, setResult] = useState<ResultState>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedFile = event.target.files?.[0];
+        if (selectedFile) {
+            resetState(false);
+            setFile(selectedFile);
+            setText('');
+        }
+    };
 
     const handleClassify = async () => {
-        if (!text.trim()) {
-            setError('Please enter some text to classify.');
+        let contentToClassify = '';
+        if (file) {
+            contentToClassify = `--- Document Analysis ---\nFilename: ${file.name}\nFile type: ${file.type}\n\n(Simulated content of the document. The AI will classify based on this information.)`;
+        } else if (text.trim()) {
+            contentToClassify = text;
+        } else {
+            setError('Please enter text or upload a file.');
             return;
         }
+
         setIsLoading(true);
         setError(null);
         setResult(null);
 
         try {
-            const classificationResult = await classifyContent(text);
+            const classificationResult = await classifyContent(contentToClassify);
             setResult(classificationResult as ResultState);
         } catch (err) {
             setError('Failed to classify content. Please try again.');
@@ -66,21 +83,29 @@ const Classifier: React.FC<ClassifierProps> = ({ onItemAdded }) => {
         }
     };
 
-    const resetState = () => {
+    const resetState = (clearFileInput = true) => {
         setText('');
+        setFile(null);
         setResult(null);
         setError(null);
         setIsLoading(false);
+        if (fileInputRef.current && clearFileInput) {
+            fileInputRef.current.value = "";
+        }
     }
 
     const handleSave = () => {
         if (!result) return;
+        
+        const sourceType = file ? SourceType.FileUpload : SourceType.Manual;
+        const bodyContent = file ? `--- Document Analysis ---\nFilename: ${file.name}\nFile type: ${file.type}\n\n(Simulated content of the document.)` : text;
+
         onItemAdded({
             title: result.classification.title,
             summary: result.classification.summary,
-            body: text,
+            body: bodyContent,
             content_type: result.classification.category,
-            source_type: SourceType.Manual,
+            source_type: sourceType,
             tags: result.classification.tags,
             event_data: result.eventData,
             recipe_data: result.recipeData,
@@ -111,20 +136,63 @@ const Classifier: React.FC<ClassifierProps> = ({ onItemAdded }) => {
         <div className="px-4">
              <DashboardCard>
                 <div className="space-y-4">
-                    <textarea
-                        value={text}
-                        onChange={(e) => setText(e.target.value)}
-                        placeholder="Paste text from a screenshot or note..."
-                        className="w-full h-24 p-3 bg-[#0C0D0F] border border-white/10 rounded-xl resize-none focus:ring-2 focus:ring-[#E6F0C6] focus:outline-none transition text-sm"
-                        disabled={!!result}
-                    />
+                    {!file && (
+                        <textarea
+                            value={text}
+                            onChange={(e) => setText(e.target.value)}
+                            placeholder="Paste text from a screenshot or note..."
+                            className="w-full h-24 p-3 bg-[#0C0D0F] border border-white/10 rounded-xl resize-none focus:ring-2 focus:ring-[#E6F0C6] focus:outline-none transition text-sm"
+                            disabled={!!result}
+                        />
+                    )}
+
+                    {file && !result && (
+                        <div className="bg-[#0C0D0F] p-3 rounded-lg border border-white/10 flex items-center justify-between animate-fade-in">
+                            <div className="flex items-center gap-3 min-w-0">
+                                <DocumentIcon className="w-6 h-6 text-gray-400 flex-shrink-0" />
+                                <span className="text-sm font-medium text-white truncate">{file.name}</span>
+                            </div>
+                            <button onClick={() => resetState()} className="p-1 rounded-full text-gray-500 hover:text-white hover:bg-white/10 flex-shrink-0">
+                                <XIcon className="w-4 h-4" />
+                            </button>
+                        </div>
+                    )}
+
+                    {!result && !file && (
+                        <>
+                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                                <div className="flex-1 h-px bg-white/10"></div>
+                                <span>OR</span>
+                                <div className="flex-1 h-px bg-white/10"></div>
+                            </div>
+                            <input
+                                type="file"
+                                onChange={handleFileChange}
+                                ref={fileInputRef}
+                                className="hidden"
+                                accept=".pdf,.doc,.docx,.txt,.md"
+                            />
+                            <button
+                                onClick={() => fileInputRef.current?.click()}
+                                className="w-full flex justify-center items-center space-x-2 font-semibold py-3 px-4 rounded-xl bg-white/10 hover:bg-white/15 active:scale-98 transition-all"
+                            >
+                                <DocumentIcon className="w-5 h-5"/>
+                                <span>Upload Document</span>
+                            </button>
+                        </>
+                    )}
+                    
                     {!result && (
                         <button
                             onClick={handleClassify}
-                            disabled={isLoading}
+                            disabled={isLoading || (!text.trim() && !file)}
                             className="w-full flex justify-center items-center space-x-2 font-bold py-3 px-4 rounded-xl bg-gradient-to-r from-[#E6F0C6] to-[#F6F2D8] text-black hover:opacity-90 active:scale-98 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                             {isLoading ? 'Analyzing...' : <> <SparklesIcon className="w-5 h-5"/> <span>Classify Text</span> </>}
+                             {isLoading ? 'Analyzing...' : (
+                                file 
+                                    ? <><SparklesIcon className="w-5 h-5"/><span>Classify File</span></> 
+                                    : <><SparklesIcon className="w-5 h-5"/><span>Classify Text</span></>
+                             )}
                         </button>
                     )}
                     
@@ -149,7 +217,7 @@ const Classifier: React.FC<ClassifierProps> = ({ onItemAdded }) => {
                             </div>
                             <div className="mt-4 flex space-x-2">
                                 <button 
-                                    onClick={resetState} 
+                                    onClick={() => resetState()} 
                                     className="w-full font-semibold py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 active:scale-98 transition-all"
                                 >
                                     Clear

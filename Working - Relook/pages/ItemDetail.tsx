@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Item, Deck, Reminder, SourceType, ContentType } from '../types';
-import { ScreenshotIcon, ArrowLeftIcon, DotsVerticalIcon, EditIcon, TrashIcon, BookOpenIcon, BellIcon, LinkIcon } from '../components/IconComponents';
+import { ScreenshotIcon, ArrowLeftIcon, DotsVerticalIcon, EditIcon, TrashIcon, BookOpenIcon, BellIcon, LinkIcon, DocumentIcon } from '../components/IconComponents';
 import AddToDeckModal from '../components/AddToDeckModal';
 import EditItemModal from '../components/EditItemModal';
 import RecipeView from '../components/RecipeView';
@@ -41,17 +41,18 @@ interface YouTubeVideo {
 }
 
 const SourceInfo: React.FC<{ type: SourceType }> = ({ type }) => {
-    const iconMap: Record<SourceType, React.ReactNode> = {
+    const iconMap: Record<string, React.ReactNode> = {
         [SourceType.Screenshot]: <ScreenshotIcon />,
         [SourceType.Manual]: <EditIcon className="w-5 h-5"/>,
         [SourceType.Bookmark]: <LinkIcon className="w-5 h-5"/>,
         [SourceType.Instagram]: <BookOpenIcon />,
         [SourceType.LinkedIn]: <BookOpenIcon />,
+        [SourceType.FileUpload]: <DocumentIcon className="w-5 h-5" />,
     };
     return (
         <div className="flex items-center space-x-2 text-sm text-gray-400 capitalize">
             {iconMap[type] || <div className="w-5 h-5 bg-gray-600 rounded-md" />}
-            <span>{type}</span>
+            <span>{type === 'fileupload' ? 'File Upload' : type}</span>
         </div>
     );
 };

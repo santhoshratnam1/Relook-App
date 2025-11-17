@@ -9,9 +9,10 @@ interface NavItemProps {
   label: string;
   isActive: boolean;
   onNavigate: (path: string) => void;
+  "data-tour-id"?: string;
 }
 
-const NavItem: React.FC<NavItemProps> = ({ path, icon, label, isActive, onNavigate }) => (
+const NavItem: React.FC<NavItemProps> = ({ path, icon, label, isActive, onNavigate, "data-tour-id": dataTourId }) => (
   <button 
     onClick={() => {
       hapticFeedback('light');
@@ -23,6 +24,7 @@ const NavItem: React.FC<NavItemProps> = ({ path, icon, label, isActive, onNaviga
         : 'text-gray-500 active:text-gray-300'
     }`}
     style={{ WebkitTapHighlightColor: 'transparent' }}
+    data-tour-id={dataTourId}
   >
     <div className={`transform transition-transform ${isActive ? 'scale-110' : ''}`}>
       {icon}
@@ -40,11 +42,11 @@ interface NavigationProps {
 
 const Navigation: React.FC<NavigationProps> = ({ currentPath, onNavigate }) => {
   const navItems = [
-    { path: '/', icon: <HomeIcon className="w-6 h-6" />, label: 'Home' },
-    { path: '/inbox', icon: <InboxIcon className="w-6 h-6" />, label: 'Inbox' },
-    { path: '/tree', icon: <TreeIcon className="w-6 h-6" />, label: 'Tree' },
-    { path: '/reminders', icon: <BellIcon className="w-6 h-6" />, label: 'Reminders' },
-    { path: '/decks', icon: <BookOpenIcon className="w-6 h-6" />, label: 'Decks' },
+    { path: '/', icon: <HomeIcon className="w-6 h-6" />, label: 'Home', tourId: 'nav-/' },
+    { path: '/inbox', icon: <InboxIcon className="w-6 h-6" />, label: 'Inbox', tourId: 'nav-/inbox' },
+    { path: '/tree', icon: <TreeIcon className="w-6 h-6" />, label: 'Tree', tourId: 'nav-/tree' },
+    { path: '/reminders', icon: <BellIcon className="w-6 h-6" />, label: 'Reminders', tourId: 'nav-/reminders' },
+    { path: '/decks', icon: <BookOpenIcon className="w-6 h-6" />, label: 'Decks', tourId: 'nav-/decks' },
   ];
 
   return (
@@ -53,7 +55,15 @@ const Navigation: React.FC<NavigationProps> = ({ currentPath, onNavigate }) => {
         <div className="flex justify-around items-stretch px-2">
           {navItems.map(item => {
             const isActive = item.path === '/' ? currentPath === '/' : currentPath.startsWith(item.path);
-            return <NavItem key={item.path} {...item} isActive={isActive} onNavigate={onNavigate} />;
+            return <NavItem 
+              key={item.path} 
+              path={item.path}
+              icon={item.icon}
+              label={item.label}
+              isActive={isActive} 
+              onNavigate={onNavigate} 
+              data-tour-id={item.tourId}
+            />;
           })}
         </div>
       </div>

@@ -37,6 +37,7 @@ export enum SourceType {
   LinkedIn = 'linkedin',
   Bookmark = 'bookmark',
   Manual = 'manual',
+  FileUpload = 'fileupload',
 }
 
 export interface User {
