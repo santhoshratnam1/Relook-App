@@ -1,6 +1,7 @@
 
+
 import React from 'react';
-import { HomeIcon, InboxIcon, BookOpenIcon, TreeIcon, BellIcon } from './IconComponents';
+import { HomeIcon, InboxNavIcon, BookOpenIcon, TreeIcon, BellIcon } from './IconComponents';
 import { hapticFeedback } from '../utils/haptics';
 
 interface NavItemProps {
@@ -43,7 +44,7 @@ interface NavigationProps {
 const Navigation: React.FC<NavigationProps> = ({ currentPath, onNavigate }) => {
   const navItems = [
     { path: '/', icon: <HomeIcon className="w-6 h-6" />, label: 'Home', tourId: 'nav-/' },
-    { path: '/inbox', icon: <InboxIcon className="w-6 h-6" />, label: 'Inbox', tourId: 'nav-/inbox' },
+    { path: '/inbox', icon: <InboxNavIcon className="w-6 h-6" />, label: 'Inbox', tourId: 'nav-/inbox' },
     { path: '/tree', icon: <TreeIcon className="w-6 h-6" />, label: 'Tree', tourId: 'nav-/tree' },
     { path: '/reminders', icon: <BellIcon className="w-6 h-6" />, label: 'Reminders', tourId: 'nav-/reminders' },
     { path: '/decks', icon: <BookOpenIcon className="w-6 h-6" />, label: 'Decks', tourId: 'nav-/decks' },

@@ -1,4 +1,5 @@
 
+
 import React, { useState, ReactNode } from 'react';
 import { Item } from '../types';
 import { FolderPlusIcon, TrashIcon } from './IconComponents';
@@ -8,9 +9,10 @@ interface SwipeableItemCardProps {
     onDelete: (itemId: string) => void;
     onAddToDeck: (item: Item) => void;
     children: ReactNode;
+    disabled?: boolean;
 }
 
-const SwipeableItemCard: React.FC<SwipeableItemCardProps> = ({ item, onDelete, onAddToDeck, children }) => {
+const SwipeableItemCard: React.FC<SwipeableItemCardProps> = ({ item, onDelete, onAddToDeck, children, disabled = false }) => {
     const [touchStart, setTouchStart] = useState(0);
     const [touchEnd, setTouchEnd] = useState(0);
     const [swipeOffset, setSwipeOffset] = useState(0);
@@ -19,17 +21,20 @@ const SwipeableItemCard: React.FC<SwipeableItemCardProps> = ({ item, onDelete, o
     const minSwipeDistance = 50;
 
     const onTouchStart = (e: React.TouchEvent) => {
+        if (disabled) return;
         setTouchEnd(0);
         setTouchStart(e.targetTouches[0].clientX);
     };
 
     const onTouchMove = (e: React.TouchEvent) => {
+        if (disabled) return;
         setTouchEnd(e.targetTouches[0].clientX);
         const distance = e.targetTouches[0].clientX - touchStart;
         setSwipeOffset(Math.max(-150, Math.min(150, distance)));
     };
 
     const onTouchEnd = () => {
+        if (disabled) return;
         if (!touchStart || !touchEnd) return;
         const distance = touchStart - touchEnd;
         const isLeftSwipe = distance > minSwipeDistance;

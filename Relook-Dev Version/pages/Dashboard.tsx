@@ -49,13 +49,13 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div className="px-4 mb-4">
         <button
           onClick={() => onNavigate('/achievements')}
-          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 p-4 rounded-2xl flex items-center justify-between hover:opacity-90 active:scale-98 transition-all shadow-lg"
+          className="w-full dashboard-card border border-white/10 p-4 rounded-2xl flex items-center justify-between hover:bg-white/5 active:scale-98 transition-all"
         >
           <div className="flex items-center space-x-3">
             <span className="text-3xl">🏆</span>
             <div className="text-left">
               <p className="font-bold text-white text-sm">Achievements</p>
-              <p className="text-xs text-white/90">
+              <p className="text-xs text-gray-400">
                 {unlockedAchievements} / {achievements.length} Unlocked
               </p>
             </div>
@@ -66,7 +66,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             viewBox="0 0 24 24" 
             strokeWidth={2.5} 
             stroke="currentColor" 
-            className="w-5 h-5 text-white"
+            className="w-5 h-5 text-gray-400"
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
           </svg>

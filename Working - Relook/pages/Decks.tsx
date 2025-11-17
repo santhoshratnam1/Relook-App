@@ -34,9 +34,12 @@ const DecksPage: React.FC<DecksPageProps> = ({ decks, items, onCreateDeck, onNav
         
         {decks.length === 0 && (
           <div className="text-center py-16 text-gray-400 animate-fade-in">
-              <BookOpenIcon className="w-16 h-16 mx-auto mb-4 text-gray-500" />
-              <h3 className="text-lg font-semibold text-gray-300">Create Your First Deck</h3>
-              <p className="text-sm mt-1">Decks are collections for your saved items. Get started by creating one!</p>
+              <div className="relative inline-block">
+                <div className="absolute -inset-4 bg-gradient-to-r from-purple-500 to-indigo-500 opacity-20 blur-2xl animate-pulse" style={{animationDuration: '4s'}}></div>
+                <BookOpenIcon className="w-16 h-16 mx-auto mb-4 text-gray-500 relative" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-300 mt-4">Create Your First Deck</h3>
+              <p className="text-sm mt-1 max-w-xs mx-auto">Decks are collections for your saved items. Get started by creating one!</p>
               <button
                 onClick={() => setIsCreating(true)}
                 className="mt-6 font-bold py-3 px-6 rounded-full bg-gradient-to-r from-[#E6F0C6] to-[#F6F2D8] text-black hover:opacity-90 active:scale-98 transition-all"

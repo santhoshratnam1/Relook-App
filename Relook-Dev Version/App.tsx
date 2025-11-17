@@ -106,6 +106,7 @@ const App: React.FC = () => {
   const comboTimerRef = useRef<number | null>(null);
   const [streakNotificationCount, setStreakNotificationCount] = useState(0);
   const prevStreakRef = useRef(rewards.streak);
+  const hasShownStreakRef = useRef(false); // Track if we've shown streak notification
 
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
@@ -151,8 +152,11 @@ const App: React.FC = () => {
     } else {
       // EXITING dev mode
       if (window.confirm('Exit dev mode? This will clear all test data and log you out.')) {
-        // Use the robust logout function which clears data and reloads
-        handleLogout();
+        // Clear dev mode flag FIRST before logout
+        localStorage.removeItem('relook-dev-mode');
+        // Then clear all data and reload
+        localStorage.clear();
+        window.location.reload();
       }
     }
   };
@@ -220,8 +224,13 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    if (rewards.streak > prevStreakRef.current && rewards.streak > 0) {
+    if (rewards.streak > prevStreakRef.current && rewards.streak > 0 && !hasShownStreakRef.current) {
       setStreakNotificationCount(rewards.streak);
+      hasShownStreakRef.current = true;
+      // Reset the flag after animation completes
+      setTimeout(() => {
+        hasShownStreakRef.current = false;
+      }, 4000);
     }
     prevStreakRef.current = rewards.streak;
   }, [rewards.streak]);
@@ -440,7 +449,13 @@ const App: React.FC = () => {
   const handleUpdateItem = useCallback(async (itemId: string, data: { title: string; body: string }) => { const itemToUpdate = items.find(i => i.id === itemId); if (!itemToUpdate) return; const itemWithUserEdits = { ...itemToUpdate, ...data }; setItems(prevItems => prevItems.map(item => item.id === itemId ? itemWithUserEdits : item)); try { const classificationResult = await classifyContent(data.body); if (classificationResult) { const newEvent = classificationResult.eventData; const oldReminderId = itemToUpdate.reminder_id; const oldReminder = oldReminderId ? reminders.find(r => r.id === oldReminderId) : null; let nextReminders = [...reminders]; let newReminderId: string | undefined = oldReminderId; if (newEvent) { const reminderTime = new Date(`${newEvent.date}T${newEvent.time || '09:00:00'}`); if (!isNaN(reminderTime.getTime())) { if (oldReminder) { const reminderIndex = nextReminders.findIndex(r => r.id === oldReminder.id); if (reminderIndex !== -1) { nextReminders[reminderIndex] = { ...oldReminder, title: newEvent.title, reminder_time: reminderTime }; } } else { const newReminder = { id: `reminder-${Date.now()}`, item_id: itemId, title: newEvent.title, reminder_time: reminderTime }; nextReminders = [newReminder, ...nextReminders]; newReminderId = newReminder.id; } } } else if (oldReminder) { nextReminders = nextReminders.filter(r => r.id !== oldReminder.id); newReminderId = undefined; } setReminders(nextReminders); const finalUpdatedItem: Item = { ...itemWithUserEdits, summary: classificationResult.classification.summary, content_type: classificationResult.classification.category, tags: classificationResult.classification.tags, reminder_id: newReminderId, event_data: classificationResult.eventData || undefined, job_data: classificationResult.jobData || undefined, product_data: classificationResult.productData || undefined, portfolio_data: classificationResult.portfolioData || undefined, tutorial_data: classificationResult.tutorialData || undefined, offer_data: classificationResult.offerData || undefined, announcement_data: classificationResult.announcementData || undefined, research_data: classificationResult.researchData || undefined, update_data: classificationResult.updateData || undefined, team_spotlight_data: classificationResult.teamSpotlightData || undefined, quote_data: classificationResult.quoteData || undefined, festival_data: classificationResult.festivalData || undefined, recipe_data: classificationResult.recipeData || undefined, post_data: classificationResult.postData || undefined, headings: classificationResult.headings, sections: classificationResult.sections, keyPhrases: classificationResult.keyPhrases, urls: classificationResult.urls, entities: classificationResult.entities, sentiment: classificationResult.sentiment, language: classificationResult.language, }; setItems(prevItems => prevItems.map(item => item.id === itemId ? finalUpdatedItem : item)); } } catch (error) { console.error('Error re-classifying item during update. User text changes are saved.', error); } }, [items, reminders]);
   const handleDeleteItem = useCallback((itemId: string) => { const itemToDelete = items.find(i => i.id === itemId); if (!itemToDelete) return; setItems(prevItems => prevItems.filter(i => i.id !== itemId)); if (itemToDelete.reminder_id) { setReminders(prevReminders => prevReminders.filter(r => r.id !== itemToDelete.reminder_id)); } }, [items]);
   const handlePurchase = useCallback((itemId: string, price: number) => { setRewards(prev => { const newXp = Math.max(0, prev.xp - price); return { ...prev, xp: newXp }; }); console.log(`Purchased ${itemId} for ${price} XP`); }, []);
-  const handleEquipItem = useCallback((item: StoreItem) => { setEquippedItems(prev => ({ ...prev, [item.type]: item.id === prev[item.type] ? undefined : item.id })); }, []);
+  const handleEquipItem = useCallback((item: StoreItem) => {
+    if (isDevMode) {
+      alert('⚠️ Cannot change appearance in dev mode. Exit dev mode to customize your profile.');
+      return;
+    }
+    setEquippedItems(prev => ({ ...prev, [item.type]: item.id === prev[item.type] ? undefined : item.id }));
+  }, [isDevMode]);
   const handleFontSizeChange = (size: 'sm' | 'md' | 'lg') => setFontSize(size);
 
   const handleToggleSelectMode = () => {
@@ -500,8 +515,8 @@ const App: React.FC = () => {
       case '/reminders': return <RemindersPage reminders={reminders} items={items} onCompleteReminder={handleCompleteReminder} />;
       case '/profile': return <ProfilePage user={user} onUpdateUser={handleUpdateUser} onBack={handleBack} fontSize={fontSize} onFontSizeChange={handleFontSizeChange} />;
       case '/achievements': return <AchievementsPage achievements={achievements} onBack={handleBack} />;
-      case '/store': return <StorePage user={user} rewards={rewards} onBack={handleBack} onPurchase={handlePurchase} />;
-      case '/my-stuff': return <MyStuffPage equippedItems={equippedItems} onEquipItem={handleEquipItem} onBack={handleBack} />;
+      case '/store': return <StorePage user={user} rewards={rewards} onBack={handleBack} onPurchase={handlePurchase} isDevMode={isDevMode} />;
+      case '/my-stuff': return <MyStuffPage equippedItems={equippedItems} onEquipItem={handleEquipItem} onBack={handleBack} isDevMode={isDevMode} />;
       case '/insights': return <InsightsPage user={user} items={items} onBack={handleBack} />;
       default: return <Dashboard user={user} rewards={rewards} recentItems={recentItems} onItemAdded={handleAddItem} missions={missions} achievements={achievements} onNavigate={handleNavigate} equippedItems={equippedItems} isMysteryBoxAvailable={isMysteryBoxAvailable} onClaimMysteryBox={handleClaimMysteryBox} />;
     }
@@ -521,7 +536,6 @@ const App: React.FC = () => {
       <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} user={user} rewards={rewards} onNavigate={handleNavigate} onLogout={handleLogout} isDevMode={isDevMode} onToggleDevMode={handleToggleDevMode}/>
       <main className="safe-area-top">{renderPage()}</main>
       <ComboNotification comboCount={comboCount} />
-      <StreakNotification streakCount={streakNotificationCount} />
       {undoState && <UndoNotification onUndo={handleUndo} />}
       {isSearchOpen && <SearchModal items={items} onClose={() => setIsSearchOpen(false)} onNavigate={handleNavigate} />}
       {showRewardModal && earnedReward && ( <RewardModal reward={earnedReward} onClose={() => { setShowRewardModal(false); setEarnedReward(null); }} /> )}

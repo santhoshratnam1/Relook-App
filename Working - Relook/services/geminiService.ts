@@ -1,3 +1,5 @@
+
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { 
     ContentType, EventData, RecipeData, JobData, PostData, 
@@ -677,6 +679,37 @@ export const classifyAudioContent = async (audioData: string, mimeType: string):
         };
     } catch (error) {
         console.error("Error classifying audio content with Gemini:", error);
+        return null;
+    }
+};
+
+export const suggestDeckNames = async (): Promise<string[] | null> => {
+    const aiClient = getAiClient();
+    if (!aiClient) return null;
+
+    const prompt = "Suggest 5 creative, concise, and distinct names for a collection of notes or ideas. For example: 'Mind Sparks', 'Idea Vault', 'Concept Canvas'. Return only a JSON object with a 'names' array.";
+    const schema = {
+        type: Type.OBJECT,
+        properties: {
+            names: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+                description: 'A list of 5 creative names.'
+            }
+        },
+        required: ['names']
+    };
+
+    try {
+        const response = await aiClient.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt,
+            config: { responseMimeType: "application/json", responseSchema: schema }
+        });
+        const result = JSON.parse(response.text.trim());
+        return result.names || null;
+    } catch (e) {
+        console.error("Error suggesting deck names:", e);
         return null;
     }
 };

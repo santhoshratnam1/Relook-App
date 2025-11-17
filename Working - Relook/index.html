@@ -255,8 +255,15 @@
         25% { transform: rotate(-3deg); }
         75% { transform: rotate(3deg); }
       }
-      .animate-box-shake:hover {
-        animation: box-shake 0.4s ease-in-out infinite;
+
+      /* breathing animation for special cards */
+      @keyframes breathe {
+        0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(192, 132, 252, 0.4); }
+        50% { transform: scale(1.02); box-shadow: 0 0 30px rgba(192, 132, 252, 0.6); }
+      }
+
+      .animate-breathe {
+        animation: breathe 3s ease-in-out infinite;
       }
       
       /* ENHANCED WEATHER EFFECTS */
@@ -370,6 +377,33 @@
       .flame-md { transform: scale(1.3); filter: drop-shadow(0 0 4px #f59e0b); }
       .flame-lg { transform: scale(1.5); filter: drop-shadow(0 0 8px #ef4444); animation: pulse 2s infinite; }
       .flame-xl { transform: scale(1.7); filter: drop-shadow(0 0 12px #ef4444); animation: pulse 1.5s infinite; }
+      
+      /* BATCH ACTION STYLES */
+      .item-card-selectable {
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      }
+      .item-card-selected {
+        transform: scale(0.98);
+        border-color: #E6F0C6;
+        box-shadow: 0 0 15px rgba(230, 240, 198, 0.3);
+      }
+      .batch-action-bar {
+        animation: slideInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      }
+
+      /* PIE CHART ANIMATION */
+      @keyframes draw-pie {
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+      .pie-chart-slice {
+        animation: draw-pie 1s 0.5s cubic-bezier(0.5, 0, 0.2, 1) forwards;
+        transform-origin: center;
+      }
+      .pie-chart-slice:hover {
+        transform: scale(1.03);
+      }
 
     </style>
   <script type="importmap">

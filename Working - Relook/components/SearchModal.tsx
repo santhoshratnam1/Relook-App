@@ -30,11 +30,31 @@ const SearchModal: React.FC<SearchModalProps> = ({ items, onClose, onNavigate })
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [selectedType, setSelectedType] = useState<ContentType | 'all'>('all');
   const [selectedDate, setSelectedDate] = useState<'all' | 'today' | '7d' | '30d'>('all');
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
+
+  useEffect(() => {
+    try {
+        const storedHistory = JSON.parse(localStorage.getItem('relook-search-history') || '[]');
+        setSearchHistory(storedHistory);
+    } catch(e) {
+        setSearchHistory([]);
+    }
+  }, []);
+
+  const saveSearchHistory = (newQuery: string) => {
+    if (!newQuery.trim()) return;
+    const updatedHistory = [newQuery, ...searchHistory.filter(h => h !== newQuery)].slice(0, 5); // Keep last 5
+    setSearchHistory(updatedHistory);
+    localStorage.setItem('relook-search-history', JSON.stringify(updatedHistory));
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(query);
-    }, 200);
+      if (query.trim()) {
+        saveSearchHistory(query);
+      }
+    }, 300);
     return () => clearTimeout(timer);
   }, [query]);
 
@@ -83,7 +103,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ items, onClose, onNavigate })
     
     // If no query and no filters, show recent 5.
     if (!debouncedQuery.trim() && selectedType === 'all' && selectedDate === 'all') {
-      return results.slice(0, 5);
+      return []; // Don't show any results until a search is made
     }
     
     return results;
@@ -95,7 +115,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ items, onClose, onNavigate })
     onClose();
   };
 
-  const isShowingRecents = !debouncedQuery.trim() && selectedType === 'all' && selectedDate === 'all';
+  const isShowingHistory = !query.trim() && searchHistory.length > 0;
 
   const contentTypeFilters: {id: ContentType | 'all', label: string}[] = [
     { id: 'all', label: 'All' },
@@ -161,13 +181,24 @@ const SearchModal: React.FC<SearchModalProps> = ({ items, onClose, onNavigate })
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {isShowingRecents && filteredItems.length > 0 && (
-          <h3 className="text-sm font-bold text-gray-500 px-3 pb-2">RECENT SAVES</h3>
+        {isShowingHistory && (
+          <>
+            <h3 className="text-sm font-bold text-gray-500 px-3 pb-2">SEARCH HISTORY</h3>
+            {searchHistory.map((historyItem, index) => (
+              <button 
+                key={index}
+                onClick={() => setQuery(historyItem)}
+                className="w-full text-left p-3 rounded-xl bg-[#1a1b1e] hover:bg-white/10 transition-colors"
+              >
+                <span className="font-semibold text-white">{historyItem}</span>
+              </button>
+            ))}
+          </>
         )}
-        {filteredItems.length === 0 && (
-          <p className="text-center text-gray-400 mt-8">No results found.</p>
+        {!isShowingHistory && filteredItems.length === 0 && (
+          <p className="text-center text-gray-400 mt-8">No results found for "{debouncedQuery}".</p>
         )}
-        {filteredItems.map(item => {
+        {!isShowingHistory && filteredItems.map(item => {
           const urlMatch = item.body.match(/https?:\/\/[^\s]+/);
           return (
             <div
