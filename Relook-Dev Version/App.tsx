@@ -69,8 +69,14 @@ type AddItemData = Omit<Item, 'id' | 'user_id' | 'created_at' | 'status' | 'thum
 const App: React.FC = () => {
   const initialIsDevMode = useMemo(() => JSON.parse(localStorage.getItem('relook-dev-mode') || 'false'), []);
   const [isDevMode, setIsDevMode] = useState<boolean>(initialIsDevMode);
+  const [showDevPanel, setShowDevPanel] = useState<boolean>(false);
 
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => !!localStorage.getItem('relook-auth'));
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    // In dev mode, always authenticated
+    if (initialIsDevMode) return true;
+    // Otherwise check localStorage
+    return !!localStorage.getItem('relook-auth');
+  });
   const [currentPath, setCurrentPath] = useState('/');
   const [navHistory, setNavHistory] = useState(['/']);
   
@@ -117,11 +123,42 @@ const App: React.FC = () => {
     setIsMysteryBoxAvailable(true);
   }, []);
 
+  const handleLogout = useCallback(() => {
+    // Update state to trigger UI changes if needed before reload
+    setIsAuthenticated(false);
+    
+    // Clear all data from local storage
+    localStorage.clear();
+    
+    // Explicitly set dev mode to off for the next load
+    localStorage.setItem('relook-dev-mode', 'false');
+
+    // Reload the application to start from a clean state (login screen)
+    window.location.reload();
+  }, []);
+
   const handleToggleDevMode = () => {
     const nextDevMode = !isDevMode;
-    setIsDevMode(nextDevMode);
-    localStorage.setItem('relook-dev-mode', JSON.stringify(nextDevMode));
-    window.location.reload();
+    
+    if (nextDevMode) {
+      // ENTERING dev mode
+      localStorage.setItem('relook-dev-mode', 'true');
+      setIsDevMode(true);
+      setIsAuthenticated(true); // Auto-authenticate in dev mode
+      setShowDevPanel(false);
+      // Load mock data immediately
+      seedMockData();
+    } else {
+      // EXITING dev mode
+      if (window.confirm('Exit dev mode? This will clear all test data and log you out.')) {
+        // Use the robust logout function which clears data and reloads
+        handleLogout();
+      }
+    }
+  };
+
+  const handleToggleDevPanel = () => {
+    setShowDevPanel(!showDevPanel);
   };
 
   const clearAllData = () => {
@@ -148,14 +185,25 @@ const App: React.FC = () => {
   
   useEffect(() => { if (!isDevMode) localStorage.setItem('relook-font-size', fontSize); }, [fontSize, isDevMode]);
 
-  useEffect(() => {
-    if (!isDevMode) localStorage.setItem('relook-equipped-items', JSON.stringify(equippedItems));
+  useEffect(() => { if (!isDevMode) localStorage.setItem('relook-equipped-items', JSON.stringify(equippedItems));
     const theme = equippedItems.theme;
     const root = document.documentElement;
     root.classList.remove('theme-ocean-depths', 'theme-sunset-glow');
     if (theme === 'theme_dark_ocean') root.classList.add('theme-ocean-depths');
     else if (theme === 'theme_sunset') root.classList.add('theme-sunset-glow');
   }, [equippedItems, isDevMode]);
+
+  // Sync dev mode changes
+  useEffect(() => {
+    const storedDevMode = JSON.parse(localStorage.getItem('relook-dev-mode') || 'false');
+    if (storedDevMode !== isDevMode) {
+      setIsDevMode(storedDevMode);
+      if (storedDevMode) {
+        setIsAuthenticated(true);
+        seedMockData();
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (isDevMode) return;
@@ -381,7 +429,6 @@ const App: React.FC = () => {
   }, [user.id, decks, updateRewards, updateMissionProgress]);
   
   const handleLogin = useCallback((loggedInUser: User) => { setIsAuthenticated(true); setUser(loggedInUser); setCurrentPath('/'); setNavHistory(['/']); setRegistrationSuccessMessage(''); }, []);
-  const handleLogout = useCallback(() => { setIsAuthenticated(false); }, []);
   const handleSignUpSuccess = useCallback(() => { setRegistrationSuccessMessage('Account created! Please log in to continue.'); setAuthPage('login'); }, []);
   const handleUpdateUser = useCallback((updatedUser: { display_name: string; avatar_url: string; }) => { setUser(prev => ({ ...prev, ...updatedUser })); }, []);
   const handleNavigate = useCallback((path: string) => { if (path === currentPath) return; setNavHistory(prev => [...prev, path]); setCurrentPath(path); setIsSelectMode(false); setSelectedItemIds([]); }, [currentPath]);
@@ -463,6 +510,14 @@ const App: React.FC = () => {
   return (
     <div className="bg-bg-color text-white min-h-screen font-sans w-full" style={{ maxWidth: '100vw', overflowX: 'hidden', paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
       <Header onMenuClick={() => setIsMenuOpen(true)} onSearchClick={() => setIsSearchOpen(true)} />
+      {/* Dev Mode Warning Banner */}
+      {isDevMode && (
+        <div className="bg-yellow-500/20 border-b border-yellow-500/30 px-4 py-2 text-center">
+          <span className="text-xs text-yellow-300 font-semibold">
+            🧪 Test Mode Active - Changes won't be saved
+          </span>
+        </div>
+      )}
       <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} user={user} rewards={rewards} onNavigate={handleNavigate} onLogout={handleLogout} isDevMode={isDevMode} onToggleDevMode={handleToggleDevMode}/>
       <main className="safe-area-top">{renderPage()}</main>
       <ComboNotification comboCount={comboCount} />
@@ -471,7 +526,29 @@ const App: React.FC = () => {
       {isSearchOpen && <SearchModal items={items} onClose={() => setIsSearchOpen(false)} onNavigate={handleNavigate} />}
       {showRewardModal && earnedReward && ( <RewardModal reward={earnedReward} onClose={() => { setShowRewardModal(false); setEarnedReward(null); }} /> )}
       {showOnboarding && <OnboardingTour onComplete={handleOnboardingComplete} />}
-      {isDevMode && <DevTools onReseed={seedMockData} onGrantXp={() => updateRewards(500)} onAddItem={() => handleAddItem(generateMockItem(Date.now(), ContentType.Post, 0, false) as AddItemData)} onClearData={clearAllData} />}
+      {isDevMode && (
+        <>
+          {/* Dev Mode Toggle Button */}
+          <button
+            onClick={handleToggleDevPanel}
+            className="fixed bottom-24 right-4 z-[9999] w-12 h-12 rounded-full bg-yellow-500/90 hover:bg-yellow-500 shadow-lg flex items-center justify-center transition-all active:scale-95"
+            aria-label="Toggle Dev Panel"
+          >
+            <span className="text-2xl">🧪</span>
+          </button>
+          
+          {/* Dev Panel */}
+          {showDevPanel && (
+            <DevTools 
+              onReseed={seedMockData} 
+              onGrantXp={() => updateRewards(500)} 
+              onAddItem={() => handleAddItem(generateMockItem(Date.now(), ContentType.Post, 0, false) as AddItemData)} 
+              onClearData={clearAllData}
+              onClose={() => setShowDevPanel(false)}
+            />
+          )}
+        </>
+      )}
       <Navigation currentPath={currentPath} onNavigate={handleNavigate} />
     </div>
   );

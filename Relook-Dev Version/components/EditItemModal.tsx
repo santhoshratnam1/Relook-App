@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { Item } from '../types';
 import Modal from './Modal';
-import { XIcon } from './IconComponents';
+import { XIcon, SparklesIcon, PlusIcon } from './IconComponents';
+import { CONTENT_SUGGESTIONS } from '../data/suggestions';
 
 interface EditItemModalProps {
   item: Item;
@@ -14,6 +15,22 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, onClose, onSave }) 
   const [title, setTitle] = useState(item.title);
   const [body, setBody] = useState(item.body);
   const [isSaving, setIsSaving] = useState(false);
+
+  const suggestions = CONTENT_SUGGESTIONS[item.content_type];
+
+  const handleSuggestTitle = () => {
+    if (suggestions && suggestions.headings.length > 0) {
+      const randomIndex = Math.floor(Math.random() * suggestions.headings.length);
+      setTitle(suggestions.headings[randomIndex]);
+    }
+  };
+
+  const handleInsertTemplate = () => {
+    if (suggestions && suggestions.subHeadings.length > 0) {
+      const template = suggestions.subHeadings.map(sh => `**${sh}:** `).join('\n\n');
+      setBody(prevBody => prevBody.trim() ? `${prevBody.trim()}\n\n${template}` : template);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,13 +57,25 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, onClose, onSave }) 
             </button>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <label htmlFor="item-title" className="text-sm font-semibold text-gray-300">Title</label>
+                    <div className="flex justify-between items-center mb-1">
+                      <label htmlFor="item-title" className="text-sm font-semibold text-gray-300">Title</label>
+                      {suggestions && (
+                        <button
+                          type="button"
+                          onClick={handleSuggestTitle}
+                          className="text-xs flex items-center gap-1 font-semibold text-[#E6F0C6] hover:text-white"
+                        >
+                          <SparklesIcon className="w-4 h-4" />
+                          Suggest
+                        </button>
+                      )}
+                    </div>
                     <input
                         id="item-title"
                         type="text"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        className="mt-1 w-full p-2 bg-[#0C0D0F] border border-white/10 rounded-lg focus:ring-2 focus:ring-[#E6F0C6] focus:outline-none transition"
+                        className="w-full p-2 bg-[#0C0D0F] border border-white/10 rounded-lg focus:ring-2 focus:ring-[#E6F0C6] focus:outline-none transition"
                         required
                         disabled={isSaving}
                     />
@@ -60,8 +89,18 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, onClose, onSave }) 
                         className="mt-1 w-full h-40 p-2 bg-[#0C0D0F] border border-white/10 rounded-lg resize-none focus:ring-2 focus:ring-[#E6F0C6] focus:outline-none transition"
                         disabled={isSaving}
                     />
+                    {suggestions && suggestions.subHeadings.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleInsertTemplate}
+                        className="mt-2 text-xs flex items-center gap-1.5 font-semibold text-gray-400 hover:text-white bg-white/5 px-2.5 py-1.5 rounded-lg active:scale-98 transition-all"
+                      >
+                        <PlusIcon className="w-3.5 h-3.5" />
+                        Insert Template
+                      </button>
+                    )}
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex space-x-2 pt-2">
                     <button
                         type="button"
                         onClick={onClose}

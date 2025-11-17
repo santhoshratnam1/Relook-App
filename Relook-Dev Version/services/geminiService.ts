@@ -647,7 +647,7 @@ export const classifyAudioContent = async (audioData: string, mimeType: string):
         const initialPrompt = `Analyze this audio recording. 1. Provide a full and accurate transcription into 'body'. 2. Based on the transcription, classify the content into the most specific category. 3. Create a concise title and a one-sentence summary. 4. Generate descriptive tags.`;
 
         const response = await aiClient.models.generateContent({
-            model: "gemini-2.5-flash-native-audio-preview-09-2025", // Use a model capable of audio processing
+            model: "gemini-2.5-flash", // Use a model capable of audio processing
             contents: { parts: [audioPart, { text: initialPrompt }] },
             config: { responseMimeType: "application/json", responseSchema: initialAudioClassificationSchema },
         });
