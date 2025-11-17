@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { User, Rewards } from '../types';
 import { XIcon } from './IconComponents';

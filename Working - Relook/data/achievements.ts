@@ -1,3 +1,4 @@
+
 import { Achievement } from '../types';
 
 export const ACHIEVEMENTS_BLUEPRINT: Omit<Achievement, 'progress' | 'unlocked'>[] = [

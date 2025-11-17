@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Header from './components/Header';
 import Navigation from './components/Navigation';
@@ -12,6 +13,7 @@ import UndoNotification from './components/UndoNotification';
 import SearchModal from './components/SearchModal';
 import SideMenu from './components/SideMenu';
 import LoginPage from './pages/LoginPage';
+import SignUpPage from './pages/SignUpPage';
 import ProfilePage from './pages/ProfilePage';
 import RewardModal from './components/RewardModal';
 import AchievementsPage from './pages/AchievementsPage';
@@ -58,7 +60,7 @@ const isSameDay = (d1: Date, d2: Date) =>
 type AddItemData = Omit<Item, 'id' | 'user_id' | 'created_at' | 'status' | 'thumbnail_url' | 'reminder_id' | 'deck_ids' | 'design_data' | 'education_data'>;
 
 const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => JSON.parse(localStorage.getItem('relook-auth') || 'false'));
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => !!localStorage.getItem('relook-auth'));
   const [currentPath, setCurrentPath] = useState('/');
   const [navHistory, setNavHistory] = useState(['/']);
   
@@ -85,6 +87,9 @@ const App: React.FC = () => {
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  const [authPage, setAuthPage] = useState<'login' | 'signup'>('login');
+  const [registrationSuccessMessage, setRegistrationSuccessMessage] = useState('');
 
   useEffect(() => { localStorage.setItem('relook-auth', JSON.stringify(isAuthenticated)); }, [isAuthenticated]);
   useEffect(() => { localStorage.setItem('relook-user', JSON.stringify(user)); }, [user]);
@@ -188,15 +193,23 @@ const App: React.FC = () => {
     checkAchievements(items.length, decks.length, rewards.streak);
   }, [isAuthenticated, achievements.length, checkAchievements, decks.length, items.length, missions.length, rewards.last_activity, rewards.streak]);
 
-  const handleLogin = useCallback(() => {
+  const handleLogin = useCallback((loggedInUser: User) => {
     setIsAuthenticated(true);
+    setUser(loggedInUser);
     setCurrentPath('/');
     setNavHistory(['/']);
+    setRegistrationSuccessMessage('');
   }, []);
 
   const handleLogout = useCallback(() => {
     setIsAuthenticated(false);
   }, []);
+
+  const handleSignUpSuccess = useCallback(() => {
+    setRegistrationSuccessMessage('Account created! Please log in to continue.');
+    setAuthPage('login');
+  }, []);
+
 
   const handleUpdateUser = useCallback((updatedUser: { display_name: string; avatar_url: string; }) => {
     setUser(prev => ({ ...prev, ...updatedUser }));
@@ -516,7 +529,14 @@ const App: React.FC = () => {
   const newInboxItems = useMemo(() => items.filter(i => i.status === ItemStatus.New), [items]);
 
   if (!isAuthenticated) {
-    return <LoginPage onLogin={handleLogin} />;
+    if (authPage === 'signup') {
+      return <SignUpPage onSignUpSuccess={handleSignUpSuccess} onShowLogin={() => setAuthPage('login')} />;
+    }
+    return <LoginPage 
+      onLogin={handleLogin} 
+      onShowSignUp={() => setAuthPage('signup')} 
+      registrationSuccessMessage={registrationSuccessMessage}
+    />;
   }
 
   const renderPage = () => {

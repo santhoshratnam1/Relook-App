@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { HomeIcon, InboxIcon, BookOpenIcon, TreeIcon, BellIcon } from './IconComponents';
 import { hapticFeedback } from '../utils/haptics';

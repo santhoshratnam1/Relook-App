@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import DashboardCard from './DashboardCard';
 import { classifyImageContent } from '../services/geminiService';

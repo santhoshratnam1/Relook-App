@@ -1,3 +1,4 @@
+
 export enum ContentType {
   // Main structured types
   Event = 'event',

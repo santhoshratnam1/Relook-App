@@ -1,3 +1,4 @@
+
 import { Mission, MissionType } from '../types';
 
 export const DAILY_MISSIONS_BLUEPRINT: Omit<Mission, 'progress'>[] = [

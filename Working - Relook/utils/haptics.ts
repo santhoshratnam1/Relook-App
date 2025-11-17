@@ -1,3 +1,4 @@
+
 export const hapticFeedback = (style: 'light' | 'medium' | 'heavy' = 'light') => {
   if ('vibrate' in navigator) {
     const duration = style === 'light' ? 10 : style === 'medium' ? 20 : 30;
