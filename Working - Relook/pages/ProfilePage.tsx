@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { User } from '../types';
 import { ArrowLeftIcon } from '../components/IconComponents';
@@ -8,9 +7,11 @@ interface ProfilePageProps {
   user: User;
   onUpdateUser: (data: { display_name: string; avatar_url: string; }) => void;
   onBack: () => void;
+  fontSize: 'sm' | 'md' | 'lg';
+  onFontSizeChange: (size: 'sm' | 'md' | 'lg') => void;
 }
 
-const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdateUser, onBack }) => {
+const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdateUser, onBack, fontSize, onFontSizeChange }) => {
   const [displayName, setDisplayName] = useState(user.display_name);
   const [avatarUrl, setAvatarUrl] = useState(user.avatar_url);
 
@@ -68,6 +69,29 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdateUser, onBack })
                 Save Changes
             </button>
         </form>
+
+        <div className="pt-6 border-t border-white/10">
+          <h2 className="text-xl font-bold text-white mb-3">Appearance</h2>
+          <div>
+            <label className="text-sm font-semibold text-gray-300">Font Size</label>
+            <div className="mt-2 flex bg-[#0C0D0F] border border-white/10 rounded-lg p-1">
+                {(['sm', 'md', 'lg'] as const).map((size) => (
+                    <button
+                        key={size}
+                        type="button"
+                        onClick={() => onFontSizeChange(size)}
+                        className={`w-1/3 py-2 text-sm font-semibold rounded-md transition-colors ${
+                            fontSize === size
+                                ? 'bg-white/20 text-white'
+                                : 'text-gray-400 hover:bg-white/10'
+                        }`}
+                    >
+                        {size === 'sm' ? 'Small' : size === 'md' ? 'Medium' : 'Large'}
+                    </button>
+                ))}
+            </div>
+          </div>
+        </div>
     </div>
   );
 };

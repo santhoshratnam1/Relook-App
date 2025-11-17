@@ -1,11 +1,12 @@
-
 import React from 'react';
 import UserProfile from '../components/UserProfile';
 import RecentSaves from '../components/RecentSaves';
 import Classifier from '../components/Classifier';
 import ImageClassifier from '../components/ImageClassifier';
 import BookmarkClassifier from '../components/BookmarkClassifier';
+import VoiceMemoClassifier from '../components/VoiceMemoClassifier';
 import DailyMissions from '../components/DailyMissions';
+import MysteryBoxCard from '../components/MysteryBoxCard';
 import { 
     User, Rewards, Item, Mission, Achievement
 } from '../types';
@@ -19,6 +20,8 @@ interface DashboardProps {
   missions: Mission[];
   achievements: Achievement[];
   equippedItems: { [key: string]: string };
+  isMysteryBoxAvailable: boolean;
+  onClaimMysteryBox: () => void;
   onItemAdded: (data: AddItemPayload) => void;
   onNavigate: (path: string) => void;
 }
@@ -31,9 +34,10 @@ const Dashboard: React.FC<DashboardProps> = ({
   missions, 
   achievements,
   onNavigate,
-  equippedItems
+  equippedItems,
+  isMysteryBoxAvailable,
+  onClaimMysteryBox,
 }) => {
-  const allMissionsComplete = missions.every(m => m.progress >= m.goal);
   const unlockedAchievements = achievements.filter(a => a.unlocked).length;
 
   return (
@@ -74,26 +78,16 @@ const Dashboard: React.FC<DashboardProps> = ({
         <DailyMissions missions={missions} />
       </div>
 
-      {/* All Missions Complete Banner */}
-      {allMissionsComplete && missions.length > 0 && (
-        <div className="px-4 mb-4">
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-[#E6F0C6]/20 to-[#F6F2D8]/20 border border-[#E6F0C6]/30 text-center">
-            <p className="text-lg font-bold text-[#E6F0C6] mb-2">🎉 All Missions Complete!</p>
-            <p className="text-sm text-gray-300 mb-3">Great work! Come back tomorrow for new challenges.</p>
-            <button 
-              onClick={() => onNavigate('/store')}
-              className="px-4 py-2 rounded-full bg-gradient-to-r from-[#E6F0C6] to-[#F6F2D8] text-black font-semibold text-sm hover:opacity-90 active:scale-95 transition-all"
-            >
-              Visit Store 🛍️
-            </button>
-          </div>
-        </div>
+      {/* Mystery Box Card */}
+      {isMysteryBoxAvailable && (
+          <MysteryBoxCard onClaim={onClaimMysteryBox} />
       )}
 
       {/* Add to Inbox Section */}
       <div className="mb-4">
         <h3 className="text-xl font-bold text-white px-4 mb-3" data-tour-id="add-to-inbox">Add to Inbox</h3>
         <div className="space-y-3">
+          <VoiceMemoClassifier onItemAdded={onItemAdded} />
           <ImageClassifier onItemAdded={onItemAdded} />
           <Classifier onItemAdded={onItemAdded} />
           <BookmarkClassifier onItemAdded={onItemAdded} />

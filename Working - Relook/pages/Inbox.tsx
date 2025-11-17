@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { Item, SourceType, Deck, ContentType } from '../types';
 import DashboardCard from '../components/DashboardCard';
-import { ScreenshotIcon, BellIcon, LinkIcon, EditIcon, DocumentIcon } from '../components/IconComponents';
+import { ScreenshotIcon, BellIcon, LinkIcon, EditIcon, DocumentIcon, MicrophoneIcon, InboxIcon as InboxEmptyIcon } from '../components/IconComponents';
 import SwipeableItemCard from '../components/SwipeableItemCard';
 import ImageLoader from '../components/ImageLoader';
 
@@ -24,6 +23,8 @@ const SourceIcon = ({ type }: { type: SourceType }) => {
             return <EditIcon className="w-5 h-5 text-gray-400" />;
         case SourceType.FileUpload:
             return <DocumentIcon className="w-5 h-5 text-gray-400" />;
+        case SourceType.VoiceMemo:
+            return <MicrophoneIcon className="w-5 h-5 text-gray-400" />;
         default:
             return <div className="w-5 h-5 bg-gray-600 rounded-md" />;
     }
@@ -48,7 +49,11 @@ const Inbox: React.FC<InboxProps> = ({ items, decks, onAutoAddItemToDeck, onDele
       <div className="px-6 space-y-4 pb-6">
           <h2 className="text-2xl font-bold text-white mt-4">Inbox</h2>
           {items.length === 0 && (
-              <p className="text-gray-400 text-center py-8">Your inbox is empty. Add items from the Home screen.</p>
+              <div className="text-center py-16 text-gray-400 animate-fade-in">
+                <InboxEmptyIcon className="w-16 h-16 mx-auto mb-4 text-gray-500" />
+                <h3 className="text-lg font-semibold text-gray-300">All caught up!</h3>
+                <p className="text-sm mt-1">Your inbox is clear. New items you save will appear here.</p>
+              </div>
           )}
           {items.map((item) => (
             <div key={item.id} className={deletingItemId === item.id ? 'item-deleting' : ''}>

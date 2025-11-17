@@ -1,7 +1,6 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { Item, SourceType, ContentType } from '../types';
-import { XIcon, ScreenshotIcon, LinkIcon, EditIcon, DocumentIcon } from './IconComponents';
+import { XIcon, ScreenshotIcon, LinkIcon, EditIcon, DocumentIcon, MicrophoneIcon } from './IconComponents';
 
 interface SearchModalProps {
   items: Item[];
@@ -19,6 +18,8 @@ const SourceIcon = ({ type }: { type: SourceType }) => {
             return <EditIcon className="w-5 h-5 text-gray-400" />;
         case SourceType.FileUpload:
             return <DocumentIcon className="w-5 h-5 text-gray-400" />;
+        case SourceType.VoiceMemo:
+            return <MicrophoneIcon className="w-5 h-5 text-gray-400" />;
         default:
             return <div className="w-5 h-5 bg-gray-600 rounded-md" />;
     }

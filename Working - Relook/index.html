@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -42,6 +41,10 @@
         -moz-osx-font-smoothing: grayscale;
         transition: background-color 0.3s ease;
       }
+
+      html.font-size-sm { font-size: 14px; }
+      html.font-size-md { font-size: 16px; }
+      html.font-size-lg { font-size: 18px; }
       
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
       
@@ -210,9 +213,93 @@
         }
       }
 
+      @keyframes floatUpFadeOut {
+        0% {
+          transform: translateY(0);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-50px);
+          opacity: 0;
+        }
+      }
+
+      @keyframes combo-pop {
+        0% { transform: scale(0.8) translateY(10px); opacity: 0; }
+        50% { transform: scale(1.1) translateY(0); opacity: 1; }
+        80% { transform: scale(0.95); }
+        100% { transform: scale(1); }
+      }
+
+      @keyframes streak-pop {
+        0% { transform: scale(0.8) translateY(10px); opacity: 0; }
+        30% { transform: scale(1.1) rotate(-5deg); opacity: 1; }
+        60% { transform: scale(1.05) rotate(5deg); }
+        100% { transform: scale(1.1) rotate(0deg); }
+      }
+      
+      /* New Animations */
+      @keyframes rain {
+        0% { transform: translateY(-20px); opacity: 0; }
+        50% { opacity: 1; }
+        100% { transform: translateY(300px); opacity: 0; }
+      }
+
+      @keyframes sun-glow {
+        0%, 100% { opacity: 0.5; transform: scale(1); }
+        50% { opacity: 0.8; transform: scale(1.05); }
+      }
+
+      @keyframes box-shake {
+        0%, 100% { transform: rotate(0deg); }
+        25% { transform: rotate(-3deg); }
+        75% { transform: rotate(3deg); }
+      }
+      .animate-box-shake:hover {
+        animation: box-shake 0.4s ease-in-out infinite;
+      }
+      
+      /* ENHANCED WEATHER EFFECTS */
+      @keyframes sun-ray-rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+
+      @keyframes sun-ray-pulse {
+        0%, 100% { opacity: 0.2; }
+        50% { opacity: 0.5; }
+      }
+      
+      @keyframes rain-splash {
+        0% { transform: scale(0) translateX(-50%); opacity: 1; }
+        80% { transform: scale(1.5) translateX(-50%); opacity: 0.5; }
+        100% { transform: scale(2) translateX(-50%); opacity: 0; }
+      }
+      /* END ENHANCED WEATHER EFFECTS */
+
+      /* NIGHT SKY ANIMATIONS */
+      @keyframes moon-glow {
+        0%, 100% { filter: drop-shadow(0 0 15px #f0f8ff) opacity(0.8); }
+        50% { filter: drop-shadow(0 0 25px #f0f8ff) opacity(1); }
+      }
+
+      @keyframes twinkle {
+        0%, 100% { opacity: 0.3; transform: scale(0.8); }
+        50% { opacity: 1; transform: scale(1.1); }
+      }
+      /* END NIGHT SKY ANIMATIONS */
+
       .item-deleting {
         animation: shrinkOut 0.3s ease-out forwards;
         overflow: hidden;
+      }
+      
+      .recording-pulse {
+        animation: pulse 1.5s infinite cubic-bezier(0.4, 0, 0.6, 1);
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
       }
 
       .animate-float-slow {
@@ -274,6 +361,16 @@
       .active\:scale-95:active {
         transform: scale(0.95);
       }
+
+      .flame {
+        display: inline-block;
+        transition: transform 0.3s ease-out, filter 0.3s ease-out;
+      }
+      .flame-sm { transform: scale(1.1); }
+      .flame-md { transform: scale(1.3); filter: drop-shadow(0 0 4px #f59e0b); }
+      .flame-lg { transform: scale(1.5); filter: drop-shadow(0 0 8px #ef4444); animation: pulse 2s infinite; }
+      .flame-xl { transform: scale(1.7); filter: drop-shadow(0 0 12px #ef4444); animation: pulse 1.5s infinite; }
+
     </style>
   <script type="importmap">
 {

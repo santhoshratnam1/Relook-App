@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Reminder, Item } from '../types';
 import DashboardCard from '../components/DashboardCard';
@@ -30,10 +29,10 @@ const RemindersPage: React.FC<RemindersPageProps> = ({ reminders, items, onCompl
     <div className="px-6 space-y-4">
       <h2 className="text-2xl font-bold text-white mt-4">Reminders</h2>
       {reminders.length === 0 && (
-          <div className="text-center py-16 text-gray-400">
-              <BellIcon className="w-12 h-12 mx-auto mb-4" />
-              <p>No reminders found.</p>
-              <p className="text-sm">The AI will automatically create them when you save items with dates or deadlines.</p>
+          <div className="text-center py-16 text-gray-400 animate-fade-in">
+              <BellIcon className="w-16 h-16 mx-auto mb-4 text-gray-500" />
+              <h3 className="text-lg font-semibold text-gray-300">No upcoming reminders</h3>
+              <p className="text-sm mt-1 max-w-xs mx-auto">The AI automatically creates reminders when you save items with dates, like events or deadlines.</p>
           </div>
       )}
       {reminders.sort((a,b) => new Date(a.reminder_time).getTime() - new Date(b.reminder_time).getTime())

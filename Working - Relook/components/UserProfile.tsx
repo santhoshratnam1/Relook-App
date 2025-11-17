@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { User, Rewards } from '../types';
 import ProgressBar from './ProgressBar';
@@ -25,6 +24,14 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, rewards, equippedItems 
     return 'border-2 border-white/20';
   };
 
+  const getFlameClass = (streak: number) => {
+    if (streak >= 30) return 'flame-xl text-orange-400';
+    if (streak >= 7) return 'flame-lg text-orange-500';
+    if (streak >= 3) return 'flame-md text-red-500';
+    if (streak > 0) return 'flame-sm text-red-600';
+    return 'text-gray-500';
+  };
+
   return (
     <div className="p-4">
       <div className="flex items-center space-x-4 mb-4">
@@ -45,10 +52,14 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, rewards, equippedItems 
       <div className="sub-card p-4 rounded-2xl border border-white/10">
         <div className="flex justify-between items-center mb-2">
           <h3 className="font-bold text-white">Level {rewards.level}</h3>
-          <span className="text-sm font-semibold text-[#E6F0C6] flex items-center gap-1">
-            <span>{rewards.streak}</span>
-            <span>day streak 🔥</span>
-          </span>
+          {rewards.streak > 0 ? (
+            <span className="text-sm font-semibold text-[#E6F0C6] flex items-center gap-1">
+              <span>{rewards.streak}</span>
+              <span>day streak <span className={`flame ${getFlameClass(rewards.streak)}`}>🔥</span></span>
+            </span>
+          ) : (
+            <span className="text-sm font-semibold text-gray-500">No streak</span>
+          )}
         </div>
         <ProgressBar value={rewards.xp} max={xpForNextLevel} />
       </div>

@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { 
     ContentType, EventData, RecipeData, JobData, PostData, 
@@ -439,6 +438,18 @@ const initialImageClassificationSchema = {
      required: ['category', 'title', 'summary', 'body']
 };
 
+const initialAudioClassificationSchema = {
+    type: Type.OBJECT,
+    properties: {
+        category: { type: Type.STRING, enum: Object.values(ContentType) },
+        title: { type: Type.STRING, description: 'A concise, compelling title under 10 words, based on the transcript.' },
+        summary: { type: Type.STRING, description: 'A one-sentence summary of the transcript.' },
+        tags: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'Specific, descriptive tags from the transcript.' },
+        body: { type: Type.STRING, description: 'Full and accurate transcription of the audio.' },
+    },
+     required: ['category', 'title', 'summary', 'body']
+};
+
 
 // --- TYPES & PARSING ---
 
@@ -467,7 +478,7 @@ type ClassificationResult = {
     language?: string;
 }
 
-type ImageClassificationResult = Omit<ClassificationResult, 'classification'> & {
+type MediaClassificationResult = Omit<ClassificationResult, 'classification'> & {
     classification: { category: ContentType; title: string; summary: string; body: string; tags?: string[] };
     visualElements?: string[];
     textLayout?: string;
@@ -575,7 +586,7 @@ export const classifyContent = async (text: string): Promise<ClassificationResul
     }
 };
 
-export const classifyImageContent = async (imageData: string, mimeType: string): Promise<ImageClassificationResult | null> => {
+export const classifyImageContent = async (imageData: string, mimeType: string): Promise<MediaClassificationResult | null> => {
     const aiClient = getAiClient();
     if (!aiClient) { return null; }
     
@@ -620,6 +631,52 @@ export const classifyImageContent = async (imageData: string, mimeType: string):
         };
     } catch (error) {
         console.error("Error classifying image content with Gemini:", error);
+        return null;
+    }
+};
+
+export const classifyAudioContent = async (audioData: string, mimeType: string): Promise<MediaClassificationResult | null> => {
+    const aiClient = getAiClient();
+    if (!aiClient) { return null; }
+
+    try {
+        // STEP 1: Transcribe audio and perform initial classification
+        const audioPart = { inlineData: { data: audioData, mimeType } };
+        const initialPrompt = `Analyze this audio recording. 1. Provide a full and accurate transcription into 'body'. 2. Based on the transcription, classify the content into the most specific category. 3. Create a concise title and a one-sentence summary. 4. Generate descriptive tags.`;
+
+        const response = await aiClient.models.generateContent({
+            model: "gemini-2.5-flash", // Use a model capable of audio processing
+            contents: { parts: [audioPart, { text: initialPrompt }] },
+            config: { responseMimeType: "application/json", responseSchema: initialAudioClassificationSchema },
+        });
+
+        const initialResultJson = JSON.parse(response.text.trim());
+        const classification = parseAndValidateClassification(initialResultJson);
+
+        // STEP 2: Detailed data extraction from the transcribed text
+        const { structured, general } = await extractDetailedData(classification.body, classification.category);
+
+        // STEP 3: Combine results and return
+        return {
+            classification,
+            eventData: classification.category === ContentType.Event ? structured : null,
+            jobData: classification.category === ContentType.Job ? structured : null,
+            productData: classification.category === ContentType.Product ? structured : null,
+            portfolioData: [ContentType.Portfolio, ContentType.Design].includes(classification.category) ? structured : null,
+            tutorialData: [ContentType.Tutorial, ContentType.Education].includes(classification.category) ? structured : null,
+            offerData: classification.category === ContentType.Offer ? structured : null,
+            announcementData: classification.category === ContentType.Announcement ? structured : null,
+            researchData: classification.category === ContentType.Research ? structured : null,
+            updateData: classification.category === ContentType.Update ? structured : null,
+            teamSpotlightData: classification.category === ContentType.TeamSpotlight ? structured : null,
+            quoteData: classification.category === ContentType.Quote ? structured : null,
+            festivalData: classification.category === ContentType.Festival ? structured : null,
+            recipeData: classification.category === ContentType.Recipe && structured.ingredients && structured.steps ? structured : null,
+            postData: classification.category === ContentType.Post ? structured : null,
+            ...general,
+        };
+    } catch (error) {
+        console.error("Error classifying audio content with Gemini:", error);
         return null;
     }
 };

@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Item, Deck, Reminder, SourceType, ContentType } from '../types';
-import { ScreenshotIcon, ArrowLeftIcon, DotsVerticalIcon, EditIcon, TrashIcon, BookOpenIcon, BellIcon, LinkIcon, DocumentIcon } from '../components/IconComponents';
+import { ScreenshotIcon, ArrowLeftIcon, DotsVerticalIcon, EditIcon, TrashIcon, BookOpenIcon, BellIcon, LinkIcon, DocumentIcon, MicrophoneIcon } from '../components/IconComponents';
 import AddToDeckModal from '../components/AddToDeckModal';
 import EditItemModal from '../components/EditItemModal';
 import RecipeView from '../components/RecipeView';
@@ -48,11 +47,19 @@ const SourceInfo: React.FC<{ type: SourceType }> = ({ type }) => {
         [SourceType.Instagram]: <BookOpenIcon />,
         [SourceType.LinkedIn]: <BookOpenIcon />,
         [SourceType.FileUpload]: <DocumentIcon className="w-5 h-5" />,
+        [SourceType.VoiceMemo]: <MicrophoneIcon className="w-5 h-5" />,
     };
+    
+    const getLabel = (type: SourceType) => {
+        if (type === 'fileupload') return 'File Upload';
+        if (type === 'voicememo') return 'Voice Memo';
+        return type;
+    };
+
     return (
         <div className="flex items-center space-x-2 text-sm text-gray-400 capitalize">
             {iconMap[type] || <div className="w-5 h-5 bg-gray-600 rounded-md" />}
-            <span>{type === 'fileupload' ? 'File Upload' : type}</span>
+            <span>{getLabel(type)}</span>
         </div>
     );
 };

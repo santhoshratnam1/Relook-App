@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Item, SourceType } from '../types';
 import DashboardCard from './DashboardCard';
-import { ScreenshotIcon, BellIcon, LinkIcon, EditIcon, DocumentIcon } from './IconComponents';
+import { ScreenshotIcon, BellIcon, LinkIcon, EditIcon, DocumentIcon, MicrophoneIcon } from './IconComponents';
 import ImageLoader from './ImageLoader';
 
 interface RecentSavesProps {
@@ -20,6 +19,8 @@ const SourceIcon = ({ type }: { type: SourceType }) => {
             return <EditIcon className="w-5 h-5 text-gray-400" />;
         case SourceType.FileUpload:
             return <DocumentIcon className="w-5 h-5 text-gray-400" />;
+        case SourceType.VoiceMemo:
+            return <MicrophoneIcon className="w-5 h-5 text-gray-400" />;
         default:
             return <div className="w-5 h-5 bg-gray-500 rounded-sm" />;
     }

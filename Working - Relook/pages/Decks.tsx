@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Deck, Item } from '../types';
 import { PlusIcon, BookOpenIcon } from '../components/IconComponents';
@@ -34,10 +33,16 @@ const DecksPage: React.FC<DecksPageProps> = ({ decks, items, onCreateDeck, onNav
         </div>
         
         {decks.length === 0 && (
-          <div className="text-center py-16 text-gray-400">
-              <BookOpenIcon className="w-12 h-12 mx-auto mb-4" />
-              <p>No decks yet.</p>
-              <p className="text-sm">Create decks to organize your saved items.</p>
+          <div className="text-center py-16 text-gray-400 animate-fade-in">
+              <BookOpenIcon className="w-16 h-16 mx-auto mb-4 text-gray-500" />
+              <h3 className="text-lg font-semibold text-gray-300">Create Your First Deck</h3>
+              <p className="text-sm mt-1">Decks are collections for your saved items. Get started by creating one!</p>
+              <button
+                onClick={() => setIsCreating(true)}
+                className="mt-6 font-bold py-3 px-6 rounded-full bg-gradient-to-r from-[#E6F0C6] to-[#F6F2D8] text-black hover:opacity-90 active:scale-98 transition-all"
+              >
+                Create Deck
+              </button>
           </div>
         )}
 

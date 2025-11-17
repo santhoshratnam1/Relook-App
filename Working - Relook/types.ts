@@ -1,4 +1,3 @@
-
 export enum ContentType {
   // Main structured types
   Event = 'event',
@@ -38,6 +37,7 @@ export enum SourceType {
   Bookmark = 'bookmark',
   Manual = 'manual',
   FileUpload = 'fileupload',
+  VoiceMemo = 'voicememo',
 }
 
 export interface User {
@@ -420,6 +420,8 @@ export enum MissionType {
   CLASSIFY_FIRST_ITEM = 'CLASSIFY_FIRST_ITEM',
   ORGANIZE_ITEM = 'ORGANIZE_ITEM',
   COMPLETE_REMINDER = 'COMPLETE_REMINDER',
+  SAVE_X_ITEMS = 'SAVE_X_ITEMS',
+  CREATE_DECK = 'CREATE_DECK',
 }
 
 export interface Mission {
@@ -439,4 +441,11 @@ export interface Achievement {
   goal: number;
   unlocked: boolean;
   reward: string;
+}
+
+export interface GenericReward {
+  title: string;
+  description: string;
+  reward: string;
+  emoji: string;
 }
